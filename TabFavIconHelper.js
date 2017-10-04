@@ -13,6 +13,12 @@ var TabFavIconHelper = {
   effectiveFavIcons: new Map(),
 
   init() {
+    this.onTabCreated = this.onTabCreated.bind(this);
+    browser.tabs.onCreated.addListener(this.onTabCreated);
+
+    this.onTabUpdated = this.onTabUpdated.bind(this);
+    browser.tabs.onUpdated.addListener(this.onTabUpdated);
+
     this.onTabRemoved = this.onTabRemoved.bind(this);
     browser.tabs.onRemoved.addListener(this.onTabRemoved);
 
@@ -20,6 +26,8 @@ var TabFavIconHelper = {
     browser.tabs.onDetached.addListener(this.onTabDetached);
 
     window.addEventListener('unload', () => {
+      browser.tabs.onCreated.removeListener(this.onTabCreated);
+      browser.tabs.onUpdated.removeListener(this.onTabUpdated);
       browser.tabs.onRemoved.removeListener(this.onTabRemoved);
       browser.tabs.onDetached.removeListener(this.onTabDetached);
     }, { once: true });
@@ -104,8 +112,22 @@ var TabFavIconHelper = {
     });
   },
 
-  onTabRemoved() {
-    this.effectiveFavIcons.delete(aTab.id);
+  onTabCreated(aTab) {
+    this.getEffectiveURL(aTab);
+  },
+
+  onTabUpdated(aTabId, aChangeInfo, aTab) {
+    if ('favIconUrl' in aChangeInfo ||
+         TabFavIconHelper.maybeImageTab(aChangeInfo)) {
+      this.getEffectiveURL(
+        aTab,
+        aChangeInfo.favIconUrl || aChangeInfo.url
+      );
+    }
+  },
+
+  onTabRemoved(aTabId, aRemoveInfo) {
+    this.effectiveFavIcons.delete(aTabId);
   },
 
   onTabDetached(aTabId, aDetachInfo) {
