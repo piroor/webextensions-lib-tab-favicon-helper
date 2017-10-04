@@ -49,3 +49,6 @@ Here is the list of parameters:
       });
    });
    ```
+
+When there is no effective favicon information, the img object given via `image` will get a class name `error`.
+The class name will be removed if any effective favicon is found.
