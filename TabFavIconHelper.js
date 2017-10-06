@@ -113,7 +113,7 @@ var TabFavIconHelper = {
   },
 
   onTabCreated(aTab) {
-    this.getEffectiveURL(aTab);
+    this.getEffectiveURL(aTab).catch(e => {});
   },
 
   onTabUpdated(aTabId, aChangeInfo, aTab) {
@@ -122,7 +122,7 @@ var TabFavIconHelper = {
       this.getEffectiveURL(
         aTab,
         aChangeInfo.favIconUrl || aChangeInfo.url
-      );
+      ).catch(e => {});
     }
   },
 
