@@ -52,7 +52,7 @@ var TabFavIconHelper = {
   getEffectiveURL(aTab, aURL = null) {
     return new Promise((aResolve, aReject) => {
       aURL = aURL || aTab.favIconUrl;
-      if (!URL && this.maybeImageTab(aTab))
+      if (!aURL && this.maybeImageTab(aTab))
         aURL = aTab.url;
 
       var loader;
