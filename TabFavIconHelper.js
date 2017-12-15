@@ -61,15 +61,15 @@ var TabFavIconHelper = {
 
   loadToImage(aParams = {}) {
     this.addTask(() => {
-    this.getEffectiveURL(aParams.tab, aParams.url)
-      .then(aURL => {
-        aParams.image.src = aURL;
-        aParams.image.classList.remove('error');
-      },
-      aError => {
-        aParams.image.src = '';
-        aParams.image.classList.add('error');
-      });
+      this.getEffectiveURL(aParams.tab, aParams.url)
+        .then(aURL => {
+          aParams.image.src = aURL;
+          aParams.image.classList.remove('error');
+        },
+        aError => {
+          aParams.image.src = '';
+          aParams.image.classList.add('error');
+        });
     });
   },
 
