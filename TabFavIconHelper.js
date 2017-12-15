@@ -11,6 +11,8 @@ var TabFavIconHelper = {
   MAYBE_IMAGE_PATTERN: /\.(jpe?g|png|gif|bmp|svg)/i,
 
   effectiveFavIcons: new Map(),
+  tasks: [],
+  processStep: 5,
 
   init() {
     this.onTabCreated = this.onTabCreated.bind(this);
@@ -33,7 +35,32 @@ var TabFavIconHelper = {
     }, { once: true });
   },
 
+  addTask(aTask) {
+    this.tasks.push(aTask);
+    this.run();
+  },
+
+  run() {
+    if (this.running)
+      return;
+    this.running = true;
+    var processOneTask = () => {
+      if (this.tasks.length == 0) {
+        this.running = false;
+      }
+      else {
+        let tasks = this.tasks.splice(0, this.processStep);
+        while (tasks.length > 0) {
+          tasks.shift()();
+        }
+        window.requestAnimationFrame(processOneTask);
+      }
+    };
+    processOneTask();
+  },
+
   loadToImage(aParams = {}) {
+    this.addTask(() => {
     this.getEffectiveURL(aParams.tab, aParams.url)
       .then(aURL => {
         aParams.image.src = aURL;
@@ -43,6 +70,7 @@ var TabFavIconHelper = {
         aParams.image.src = '';
         aParams.image.classList.add('error');
       });
+    });
   },
 
   maybeImageTab(aTab) {
