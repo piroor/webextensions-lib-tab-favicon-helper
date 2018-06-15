@@ -66,7 +66,7 @@ const TabFavIconHelper = {
           aParams.image.src = aURL;
           aParams.image.classList.remove('error');
         },
-              aError => {
+              _aError => {
                 aParams.image.src = '';
                 aParams.image.classList.add('error');
               });
@@ -141,7 +141,7 @@ const TabFavIconHelper = {
   },
 
   onTabCreated(aTab) {
-    this.getEffectiveURL(aTab).catch(e => {});
+    this.getEffectiveURL(aTab).catch(_e => {});
   },
 
   onTabUpdated(aTabId, aChangeInfo, aTab) {
@@ -150,15 +150,15 @@ const TabFavIconHelper = {
       this.getEffectiveURL(
         aTab,
         aChangeInfo.favIconUrl || aChangeInfo.url
-      ).catch(e => {});
+      ).catch(_e => {});
     }
   },
 
-  onTabRemoved(aTabId, aRemoveInfo) {
+  onTabRemoved(aTabId, _aRemoveInfo) {
     this.effectiveFavIcons.delete(aTabId);
   },
 
-  onTabDetached(aTabId, aDetachInfo) {
+  onTabDetached(aTabId, _aDetachInfo) {
     this.effectiveFavIcons.delete(aTabId);
   }
 };
