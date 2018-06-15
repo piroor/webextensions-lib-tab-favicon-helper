@@ -5,7 +5,7 @@
 */
 'use strict';
 
-var TabFavIconHelper = {
+const TabFavIconHelper = {
   LAST_EFFECTIVE_FAVICON: 'last-effective-favIcon',
   VALID_FAVICON_PATTERN: /^(about|app|chrome|data|file|ftp|https?|moz-extension|resource):/,
   MAYBE_IMAGE_PATTERN: /\.(jpe?g|png|gif|bmp|svg)/i,
@@ -44,12 +44,12 @@ var TabFavIconHelper = {
     if (this.running)
       return;
     this.running = true;
-    var processOneTask = () => {
+    const processOneTask = () => {
       if (this.tasks.length == 0) {
         this.running = false;
       }
       else {
-        let tasks = this.tasks.splice(0, this.processStep);
+        const tasks = this.tasks.splice(0, this.processStep);
         while (tasks.length > 0) {
           tasks.shift()();
         }
@@ -66,10 +66,10 @@ var TabFavIconHelper = {
           aParams.image.src = aURL;
           aParams.image.classList.remove('error');
         },
-        aError => {
-          aParams.image.src = '';
-          aParams.image.classList.add('error');
-        });
+              aError => {
+                aParams.image.src = '';
+                aParams.image.classList.add('error');
+              });
     });
   },
 
@@ -83,13 +83,13 @@ var TabFavIconHelper = {
       if (!aURL && this.maybeImageTab(aTab))
         aURL = aTab.url;
 
-      var loader;
-      var onLoad = (() => {
-        var oldData = this.effectiveFavIcons.get(aTab.id);
+      let loader;
+      let onLoad = (() => {
+        const oldData = this.effectiveFavIcons.get(aTab.id);
         if (!oldData ||
             oldData.url != aTab.url ||
             oldData.favIconUrl != aURL) {
-          let lastEffectiveFavicon = {
+          const lastEffectiveFavicon = {
             url:        aTab.url,
             favIconUrl: aURL
           };
@@ -101,9 +101,9 @@ var TabFavIconHelper = {
         aResolve(aURL);
         clear();
       });
-      var onError = (async (aError) => {
+      let onError = (async (aError) => {
         clear();
-        let effectiveFaviconData = this.effectiveFavIcons.get(aTab.id) ||
+        const effectiveFaviconData = this.effectiveFavIcons.get(aTab.id) ||
                                    (browser.sessions &&
                                     browser.sessions.setTabValue &&
                                     await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON));
@@ -116,7 +116,7 @@ var TabFavIconHelper = {
           aReject(aError || new Error('No effective icon'));
         }
       });
-      var clear = (() => {
+      const clear = (() => {
         if (loader) {
           loader.removeEventListener('load', onLoad, { once: true });
           loader.removeEventListener('error', onError, { once: true });
