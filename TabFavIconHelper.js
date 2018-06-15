@@ -83,8 +83,16 @@ const TabFavIconHelper = {
       if (!aURL && this.maybeImageTab(aTab))
         aURL = aTab.url;
 
-      let loader;
-      let onLoad = (() => {
+      let loader, onLoad, onError;
+      const clear = (() => {
+        if (loader) {
+          loader.removeEventListener('load', onLoad, { once: true });
+          loader.removeEventListener('error', onError, { once: true });
+        }
+        loader = onLoad = onError = undefined;
+      });
+
+      onLoad = (() => {
         const oldData = this.effectiveFavIcons.get(aTab.id);
         if (!oldData ||
             oldData.url != aTab.url ||
@@ -94,14 +102,14 @@ const TabFavIconHelper = {
             favIconUrl: aURL
           };
           this.effectiveFavIcons.set(aTab.id, lastEffectiveFavicon);
-          browser.sessions &&
-            browser.sessions.setTabValue &&
+          if (browser.sessions &&
+              browser.sessions.setTabValue)
             browser.sessions.setTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON, lastEffectiveFavicon);
         }
         aResolve(aURL);
         clear();
       });
-      let onError = (async (aError) => {
+      onError = (async (aError) => {
         clear();
         const effectiveFaviconData = this.effectiveFavIcons.get(aTab.id) ||
                                    (browser.sessions &&
@@ -115,13 +123,6 @@ const TabFavIconHelper = {
         else {
           aReject(aError || new Error('No effective icon'));
         }
-      });
-      const clear = (() => {
-        if (loader) {
-          loader.removeEventListener('load', onLoad, { once: true });
-          loader.removeEventListener('error', onError, { once: true });
-        }
-        loader = onLoad = onError = undefined;
       });
       if (!aURL ||
           !this.VALID_FAVICON_PATTERN.test(aURL)) {
