@@ -23,9 +23,11 @@ And, call `TabFavIconHelper.loadToImage()` with required parameters like:
 
 ```javascript
 var img = document.createElement('img');
-TabFavIconHelper.loadToImage({
-  image: img,
-  tab:   aTab
+browser.tabs.onUpdated.addListener((aTabId, aChangeInfo, aTab) => {
+  TabFavIconHelper.loadToImage({
+    image: img,
+    tab:   aTab
+  });
 });
 ```
 
@@ -33,22 +35,8 @@ Here is the list of parameters:
 
  * `image`: An image element.
  * `tab`: A `tabs.Tab` object.
- * `url`: A string of a URL, which is used as the favicon image instead of the tab's information.
-   This will be useful for a listener of `tabs.onUpdated`, because it receives an object only including changed attributes.
-   For example:
-   
-   ```javascript
-   var img = document.createElement('img');
-   browser.tabs.onUpdated.addListener((aTabId, aChangeInfo, aTab) => {
-    if ('favIconUrl' in aChangeInfo ||
-        TabFavIconHelper.maybeImageTab(aChangeInfo))
-      TabFavIconHelper.loadToImage(
-        image: img
-        tab:   aTab,
-        url:   aChangeInfo.favIconUrl || aChangeInfo.url
-      });
-   });
-   ```
+ * `url` (optional): A string of a URL, which is used as the favicon image instead of the tab's information.
+   You can use this to set special image as an alternative facion.
 
 When there is no effective favicon information, the img object given via `image` will get a class name `error`.
 The class name will be removed if any effective favicon is found.
