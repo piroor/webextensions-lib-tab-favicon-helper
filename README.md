@@ -1,5 +1,7 @@
 # webextensions-lib-tab-favicon-helper
 
+[![Build Status](https://travis-ci.org/piroor/webextensions-lib-tab-favicon-helper.svg?branch=master)](https://travis-ci.org/piroor/webextensions-lib-tab-favicon-helper)
+
 Helps to show favicon image from tabs.Tab.
 
 As described at [bug 1402393](https://bugzilla.mozilla.org/show_bug.cgi?id=1402393), WebExtensions doesn't provide any feature to cache effective favicons.
