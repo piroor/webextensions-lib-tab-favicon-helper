@@ -1,0 +1,9 @@
+language: node_js
+notifications:
+  recipients:
+    - piro.outsider.reflex@gmail.com
+before_script:
+  - npm install
+script:
+  - make lint
+
