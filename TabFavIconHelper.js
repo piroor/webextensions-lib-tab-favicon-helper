@@ -204,7 +204,7 @@ const TabFavIconHelper = {
 
   onTabUpdated(aTabId, aChangeInfo, aTab) {
     if ('favIconUrl' in aChangeInfo ||
-         TabFavIconHelper.maybeImageTab(aChangeInfo)) {
+         this.maybeImageTab(aChangeInfo)) {
       this.getEffectiveURL(
         aTab,
         aChangeInfo.favIconUrl || aChangeInfo.url
