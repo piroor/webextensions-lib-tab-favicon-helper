@@ -174,6 +174,7 @@ const TabFavIconHelper = {
           });
         }
         else {
+          this.clearEffectiveFavIconFor(aTab);
           aReject(aError || new Error('No effective icon'));
         }
       });
