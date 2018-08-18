@@ -162,7 +162,7 @@ const TabFavIconHelper = {
         clear();
         const effectiveFaviconData = this.effectiveFavIcons.get(aTab.id) ||
                                    (browser.sessions &&
-                                    browser.sessions.setTabValue &&
+                                    browser.sessions.getTabValue &&
                                     await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON));
         if (effectiveFaviconData &&
             effectiveFaviconData.url == aTab.url &&
