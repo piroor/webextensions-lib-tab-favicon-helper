@@ -43,6 +43,7 @@ const TabFavIconHelper = {
 `,
 
   effectiveFavIcons: new Map(),
+  uneffectiveFavIcons: new Map(),
   tasks: [],
   processStep: 5,
 
@@ -155,6 +156,7 @@ const TabFavIconHelper = {
               browser.sessions.setTabValue)
             browser.sessions.setTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON, lastEffectiveFavicon);
         }
+        this.uneffectiveFavIcons.delete(aTab.id);
         aResolve(aURL);
         clear();
       });
@@ -168,7 +170,8 @@ const TabFavIconHelper = {
         if (browser.sessions &&
             browser.sessions.removeTabValue)
           browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
-        if (effectiveFaviconData &&
+        if (!this.uneffectiveFavIcons.has(aTab.id) &&
+            effectiveFaviconData &&
             effectiveFaviconData.url == aTab.url &&
             effectiveFaviconData.favIconUrl &&
             aURL != effectiveFaviconData.favIconUrl) {
@@ -177,6 +180,10 @@ const TabFavIconHelper = {
           });
         }
         else {
+          this.uneffectiveFavIcons.set(aTab.id, {
+            url:        aTab.url,
+            favIconUrl: aURL
+          });
           aReject(aError || new Error('No effective icon'));
         }
       });
@@ -213,10 +220,12 @@ const TabFavIconHelper = {
 
   onTabRemoved(aTabId, _aRemoveInfo) {
     this.effectiveFavIcons.delete(aTabId);
+    this.uneffectiveFavIcons.delete(aTabId);
   },
 
   onTabDetached(aTabId, _aDetachInfo) {
     this.effectiveFavIcons.delete(aTabId);
+    this.uneffectiveFavIcons.delete(aTabId);
   }
 };
 TabFavIconHelper.init();
