@@ -166,10 +166,15 @@ const TabFavIconHelper = {
                                     await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON));
         if (effectiveFaviconData &&
             effectiveFaviconData.url == aTab.url &&
+            effectiveFaviconData.favIconUrl &&
             aURL != effectiveFaviconData.favIconUrl) {
-          this.getEffectiveURL(aTab, effectiveFaviconData.favIconUrl).then(aResolve, aReject);
+          this.getEffectiveURL(aTab, effectiveFaviconData.favIconUrl).then(aResolve, aError => {
+            browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON));
+            aReject(aError);
+          });
         }
         else {
+          browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON));
           aReject(aError || new Error('No effective icon'));
         }
       });
