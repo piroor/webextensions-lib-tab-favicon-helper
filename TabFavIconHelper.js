@@ -165,7 +165,9 @@ const TabFavIconHelper = {
                                     browser.sessions.getTabValue &&
                                     await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON));
         this.effectiveFavIcons.delete(aTab.id);
-        browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
+        if (browser.sessions &&
+            browser.sessions.removeTabValue)
+          browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
         if (effectiveFaviconData &&
             effectiveFaviconData.url == aTab.url &&
             effectiveFaviconData.favIconUrl &&
