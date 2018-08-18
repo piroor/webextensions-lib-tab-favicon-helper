@@ -169,12 +169,11 @@ const TabFavIconHelper = {
             effectiveFaviconData.favIconUrl &&
             aURL != effectiveFaviconData.favIconUrl) {
           this.getEffectiveURL(aTab, effectiveFaviconData.favIconUrl).then(aResolve, aError => {
-            browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
+            this.clearEffectiveFavIconFor(aTab);
             aReject(aError);
           });
         }
         else {
-          browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
           aReject(aError || new Error('No effective icon'));
         }
       });
@@ -193,6 +192,10 @@ const TabFavIconHelper = {
         onError(e);
       }
     });
+  },
+  clearEffectiveFavIconFor(aTab) {
+    this.effectiveFavIcons.delete(aTab.id);
+    browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
   },
 
   onTabCreated(aTab) {
