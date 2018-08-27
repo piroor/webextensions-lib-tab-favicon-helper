@@ -113,18 +113,21 @@ const TabFavIconHelper = {
   getSafeFaviconUrl(url) {
     switch (url) {
       case 'chrome://browser/skin/settings.svg':
-        return `data:image/svg+xml,${this.FAVICON_SETTINGS}`;
+        return this.getSVGDataURI(this.FAVICON_SETTINGS);
       case 'chrome://mozapps/skin/extensions/extensionGeneric-16.svg':
-        return `data:image/svg+xml,${this.FAVICON_EXTENSION}`;
+        return this.getSVGDataURI(this.FAVICON_EXTENSION);
       case 'chrome://browser/skin/privatebrowsing/favicon.svg':
-        return `data:image/svg+xml,${this.FAVICON_PRIVATE_BROWSING}`;
+        return this.getSVGDataURI(this.FAVICON_PRIVATE_BROWSING);
       default:
         if (/^chrome:\/\//.test(url) &&
             !/^chrome:\/\/branding\//.test(url))
-          return `data:image/svg+xml,${this.FAVICON_PRIVATE_GLOBE}`;
+          return this.getSVGDataURI(this.FAVICON_PRIVATE_GLOBE);
         break;
     }
     return url;
+  },
+  getSVGDataURI(svg) {
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
   },
 
   getEffectiveURL(aTab, aURL = null) {
