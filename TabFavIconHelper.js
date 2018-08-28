@@ -68,6 +68,13 @@ const TabFavIconHelper = {
     }, { once: true });
   },
 
+  sessionAPIAvailable: (
+    browser.sessions &&
+    browser.sessions.getTabValue &&
+    browser.sessions.setTabValue &&
+    browser.sessions.removeTabValue
+  ),
+
   addTask(aTask) {
     this.tasks.push(aTask);
     this.run();
@@ -155,8 +162,7 @@ const TabFavIconHelper = {
             favIconUrl: aURL
           };
           this.effectiveFavIcons.set(aTab.id, lastEffectiveFavicon);
-          if (browser.sessions &&
-              browser.sessions.setTabValue)
+          if (this.sessionAPIAvailable)
             browser.sessions.setTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON, lastEffectiveFavicon);
         }
         this.uneffectiveFavIcons.delete(aTab.id);
@@ -166,12 +172,10 @@ const TabFavIconHelper = {
       onError = (async (aError) => {
         clear();
         const effectiveFaviconData = this.effectiveFavIcons.get(aTab.id) ||
-                                   (browser.sessions &&
-                                    browser.sessions.getTabValue &&
+                                   (this.sessionAPIAvailable &&
                                     await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON));
         this.effectiveFavIcons.delete(aTab.id);
-        if (browser.sessions &&
-            browser.sessions.removeTabValue)
+        if (this.sessionAPIAvailable)
           browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
         if (!this.uneffectiveFavIcons.has(aTab.id) &&
             effectiveFaviconData &&
