@@ -138,10 +138,23 @@ const TabFavIconHelper = {
   },
 
   getEffectiveURL(aTab, aURL = null) {
-    return new Promise((aResolve, aReject) => {
+    return new Promise(async (aResolve, aReject) => {
       aURL = this.getSafeFaviconUrl(aURL || aTab.favIconUrl);
-      if (!aURL && this.maybeImageTab(aTab))
-        aURL = aTab.url;
+      if (!aURL) {
+        if (this.maybeImageTab(aTab)) {
+          aURL = aTab.url;
+        }
+        else if (aTab.discarded) {
+          // discarded tab doesn't have favIconUrl, so we should use cached data.
+          let lastData = this.effectiveFavIcons.get(aTab.id);
+          if (!lastData &&
+              this.sessionAPIAvailable)
+            lastData = await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
+          if (lastData &&
+              lastData.url == aTab.url)
+            aURL = lastData.favIconUrl;
+        }
+      }
 
       let loader, onLoad, onError;
       const clear = (() => {
