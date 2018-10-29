@@ -229,14 +229,36 @@ const TabFavIconHelper = {
   },
 
   onTabUpdated(aTabId, aChangeInfo, aTab) {
-    if ('favIconUrl' in aChangeInfo ||
-         this.maybeImageTab(aChangeInfo)) {
+    if (!this._hasFavIconInfo(aChangeInfo))
+      return;
+    let timer = this._updatingTabs.get(aTabId);
+    if (timer)
+      clearTimeout(timer);
+    // Updating of last effective favicon must be done after the loading
+    // of the tab itself is correctly done, to avoid cookie problems on
+    // some websites.
+    // See also: https://github.com/piroor/treestyletab/issues/2064
+    timer = setTimeout(async () => {
+      this._updatingTabs.delete(aTabId);
+      const tab = await browser.tabs.get(aTabId);
+      if (!tab ||
+          (aChangeInfo.favIconUrl &&
+           tab.favIconUrl != aChangeInfo.favIconUrl) ||
+          (aChangeInfo.url &&
+           tab.url != aChangeInfo.url) ||
+          !this._hasFavIconInfo(tab))
+        return; // expired
       this.getEffectiveURL(
         aTab,
         aChangeInfo.favIconUrl || aChangeInfo.url
       ).catch(_e => {});
-    }
+    }, 5000);
+    this._updatingTabs.set(aTabId, timer);
   },
+  _hasFavIconInfo(tabOrChangeInfo) {
+    return 'favIconUrl' in tabOrChangeInfo || this.maybeImageTab(tabOrChangeInfo);
+  },
+  _updatingTabs: new Map(),
 
   onTabRemoved(aTabId, _aRemoveInfo) {
     this.effectiveFavIcons.delete(aTabId);
