@@ -137,6 +137,14 @@ const TabFavIconHelper = {
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
   },
 
+  async getLastEffectiveFavIconURL(aTab) {
+    const lastData = await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
+    if (lastData &&
+        lastData.url == aTab.url)
+      return lastData.favIconUrl;
+    return null;
+  },
+
   getEffectiveURL(aTab, aURL = null) {
     return new Promise(async (aResolve, aReject) => {
       aURL = this.getSafeFaviconUrl(aURL || aTab.favIconUrl);
