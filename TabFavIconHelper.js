@@ -42,6 +42,9 @@ const TabFavIconHelper = {
 </svg>
 `,
 
+  recentEffectiveFavIcons: [],
+  recentUneffectiveFavIcons: [],
+  maxRecentEffectiveFavIcons: 30,
   effectiveFavIcons: new Map(),
   uneffectiveFavIcons: new Map(),
   tasks: [],
@@ -174,6 +177,15 @@ const TabFavIconHelper = {
       });
 
       onLoad = (() => {
+        const uneffectiveIndex = this.recentUneffectiveFavIcons.indexOf(aURL);
+        if (uneffectiveIndex > -1)
+          this.recentUneffectiveFavIcons.splice(uneffectiveIndex, 1);
+        const effectiveIndex = this.recentEffectiveFavIcons.indexOf(aURL);
+        if (effectiveIndex > -1)
+          this.recentEffectiveFavIcons.splice(effectiveIndex, 1);
+        this.recentEffectiveFavIcons.push(aURL);
+        this.recentEffectiveFavIcons = this.recentEffectiveFavIcons.slice(-this.maxRecentEffectiveFavIcons);
+
         const oldData = this.effectiveFavIcons.get(aTab.id);
         if (!oldData ||
             oldData.url != aTab.url ||
@@ -191,6 +203,15 @@ const TabFavIconHelper = {
         clear();
       });
       onError = (async (aError) => {
+        const effectiveIndex = this.recentEffectiveFavIcons.indexOf(aURL);
+        if (effectiveIndex > -1)
+          this.recentEffectiveFavIcons.splice(effectiveIndex, 1);
+        const uneffectiveIndex = this.recentUneffectiveFavIcons.indexOf(aURL);
+        if (uneffectiveIndex > -1)
+          this.recentUneffectiveFavIcons.splice(uneffectiveIndex, 1);
+        this.recentUneffectiveFavIcons.push(aURL);
+        this.recentUneffectiveFavIcons = this.recentUneffectiveFavIcons.slice(-this.maxRecentEffectiveFavIcons);
+
         clear();
         const effectiveFaviconData = this.effectiveFavIcons.get(aTab.id) ||
                                    (this.sessionAPIAvailable &&
@@ -215,8 +236,11 @@ const TabFavIconHelper = {
           aReject(aError || new Error('No effective icon'));
         }
       });
+      if (this.recentEffectiveFavIcons.includes(aURL))
+        return onLoad();
       if (!aURL ||
-          !this.VALID_FAVICON_PATTERN.test(aURL)) {
+          !this.VALID_FAVICON_PATTERN.test(aURL) ||
+          this.recentUneffectiveFavIcons.includes(aURL)) {
         onError();
         return;
       }
