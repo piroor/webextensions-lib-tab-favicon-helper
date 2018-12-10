@@ -12,7 +12,6 @@
 const TabFavIconHelper = {
   LAST_EFFECTIVE_FAVICON: 'last-effective-favIcon',
   VALID_FAVICON_PATTERN: /^(about|app|chrome|data|file|ftp|https?|moz-extension|resource):/,
-  MAYBE_IMAGE_PATTERN: /\.(jpe?g|png|gif|bmp|svg)/i,
 
   // original: chrome://mozapps/skin/extensions/extensionGeneric-16.svg
   FAVICON_EXTENSION: `
@@ -126,8 +125,8 @@ const TabFavIconHelper = {
     });
   },
 
-  maybeImageTab(aTab) {
-    return aTab && 'url' in aTab && this.MAYBE_IMAGE_PATTERN.test(aTab.url);
+  maybeImageTab(aTab) { // for backward compatibility
+    return false;
   },
 
   getSafeFaviconUrl(url) {
@@ -161,20 +160,15 @@ const TabFavIconHelper = {
   getEffectiveURL(aTab, aURL = null) {
     return new Promise(async (aResolve, aReject) => {
       aURL = this.getSafeFaviconUrl(aURL || aTab.favIconUrl);
-      if (!aURL) {
-        if (this.maybeImageTab(aTab)) {
-          aURL = aTab.url;
-        }
-        else if (aTab.discarded) {
-          // discarded tab doesn't have favIconUrl, so we should use cached data.
-          let lastData = this.effectiveFavIcons.get(aTab.id);
-          if (!lastData &&
-              this.sessionAPIAvailable)
-            lastData = await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
-          if (lastData &&
-              lastData.url == aTab.url)
-            aURL = lastData.favIconUrl;
-        }
+      if (!aURL && aTab.discarded) {
+        // discarded tab doesn't have favIconUrl, so we should use cached data.
+        let lastData = this.effectiveFavIcons.get(aTab.id);
+        if (!lastData &&
+            this.sessionAPIAvailable)
+          lastData = await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
+        if (lastData &&
+            lastData.url == aTab.url)
+          aURL = lastData.favIconUrl;
       }
 
       let loader, onLoad, onError;
@@ -308,13 +302,13 @@ const TabFavIconHelper = {
         return; // expired
       this.getEffectiveURL(
         aTab,
-        aChangeInfo.favIconUrl || aChangeInfo.url
+        aChangeInfo.favIconUrl
       ).catch(_e => {});
     }, 5000);
     this._updatingTabs.set(aTabId, timer);
   },
   _hasFavIconInfo(tabOrChangeInfo) {
-    return 'favIconUrl' in tabOrChangeInfo || this.maybeImageTab(tabOrChangeInfo);
+    return 'favIconUrl' in tabOrChangeInfo;
   },
   _updatingTabs: new Map(),
 
