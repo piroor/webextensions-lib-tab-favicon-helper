@@ -87,8 +87,8 @@ const TabFavIconHelper = {
     browser.sessions.removeTabValue
   ),
 
-  addTask(aTask) {
-    this.tasks.push(aTask);
+  addTask(task) {
+    this.tasks.push(task);
     this.run();
   },
 
@@ -111,21 +111,21 @@ const TabFavIconHelper = {
     processOneTask();
   },
 
-  loadToImage(aParams = {}) {
+  loadToImage(params = {}) {
     this.addTask(() => {
-      this.getEffectiveURL(aParams.tab, aParams.url)
-        .then(aURL => {
-          aParams.image.src = aURL;
-          aParams.image.classList.remove('error');
+      this.getEffectiveURL(params.tab, params.url)
+        .then(url => {
+          params.image.src = url;
+          params.image.classList.remove('error');
         },
               _aError => {
-                aParams.image.src = '';
-                aParams.image.classList.add('error');
+                params.image.src = '';
+                params.image.classList.add('error');
               });
     });
   },
 
-  maybeImageTab(aTab) { // for backward compatibility
+  maybeImageTab(_tab) { // for backward compatibility
     return false;
   },
 
@@ -149,26 +149,26 @@ const TabFavIconHelper = {
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
   },
 
-  async getLastEffectiveFavIconURL(aTab) {
-    const lastData = await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
+  async getLastEffectiveFavIconURL(tab) {
+    const lastData = await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
     if (lastData &&
-        lastData.url == aTab.url)
+        lastData.url == tab.url)
       return lastData.favIconUrl;
     return null;
   },
 
-  getEffectiveURL(aTab, aURL = null) {
+  getEffectiveURL(tab, url = null) {
     return new Promise(async (aResolve, aReject) => {
-      aURL = this.getSafeFaviconUrl(aURL || aTab.favIconUrl);
-      if (!aURL && aTab.discarded) {
+      url = this.getSafeFaviconUrl(url || tab.favIconUrl);
+      if (!url && tab.discarded) {
         // discarded tab doesn't have favIconUrl, so we should use cached data.
-        let lastData = this.effectiveFavIcons.get(aTab.id);
+        let lastData = this.effectiveFavIcons.get(tab.id);
         if (!lastData &&
             this.sessionAPIAvailable)
-          lastData = await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
+          lastData = await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
         if (lastData &&
-            lastData.url == aTab.url)
-          aURL = lastData.favIconUrl;
+            lastData.url == tab.url)
+          url = lastData.favIconUrl;
       }
 
       let loader, onLoad, onError;
@@ -181,23 +181,23 @@ const TabFavIconHelper = {
       });
 
       onLoad = ((cache) => {
-        const uneffectiveIndex = this.recentUneffectiveFavIcons.indexOf(aURL);
+        const uneffectiveIndex = this.recentUneffectiveFavIcons.indexOf(url);
         if (uneffectiveIndex > -1)
           this.recentUneffectiveFavIcons.splice(uneffectiveIndex, 1);
-        const effectiveIndex = this.recentEffectiveFavIcons.findIndex(item => item && item.url === aURL);
+        const effectiveIndex = this.recentEffectiveFavIcons.findIndex(item => item && item.url === url);
         if (effectiveIndex > -1) {
           this.recentEffectiveFavIcons.splice(effectiveIndex, 1);
         }
         else {
           let data = null;
-          if (!aURL.startsWith('data:')) {
+          if (!url.startsWith('data:')) {
             const context = this.canvas.getContext('2d');
             context.clearRect(0, 0, this.FAVICON_SIZE, this.FAVICON_SIZE);
             context.drawImage(loader, 0, 0, this.FAVICON_SIZE, this.FAVICON_SIZE);
             data = this.canvas.toDataURL('image/png');
           }
           cache = {
-            url: aURL,
+            url,
             data
           };
           console.log(cache);
@@ -205,62 +205,62 @@ const TabFavIconHelper = {
         this.recentEffectiveFavIcons.push(cache);
         this.recentEffectiveFavIcons = this.recentEffectiveFavIcons.slice(-this.maxRecentEffectiveFavIcons);
 
-        const oldData = this.effectiveFavIcons.get(aTab.id);
+        const oldData = this.effectiveFavIcons.get(tab.id);
         if (!oldData ||
-            oldData.url != aTab.url ||
-            oldData.favIconUrl != aURL) {
+            oldData.url != tab.url ||
+            oldData.favIconUrl != url) {
           const lastEffectiveFavicon = {
-            url:        aTab.url,
-            favIconUrl: aURL
+            url:        tab.url,
+            favIconUrl: url
           };
-          this.effectiveFavIcons.set(aTab.id, lastEffectiveFavicon);
+          this.effectiveFavIcons.set(tab.id, lastEffectiveFavicon);
           if (this.sessionAPIAvailable)
-            browser.sessions.setTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON, lastEffectiveFavicon);
+            browser.sessions.setTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON, lastEffectiveFavicon);
         }
-        this.uneffectiveFavIcons.delete(aTab.id);
-        aResolve(cache && cache.data || aURL);
+        this.uneffectiveFavIcons.delete(tab.id);
+        aResolve(cache && cache.data || url);
         clear();
       });
       onError = (async (aError) => {
-        const effectiveIndex = this.recentEffectiveFavIcons.findIndex(item => item && item.url === aURL);
+        const effectiveIndex = this.recentEffectiveFavIcons.findIndex(item => item && item.url === url);
         if (effectiveIndex > -1)
           this.recentEffectiveFavIcons.splice(effectiveIndex, 1);
-        const uneffectiveIndex = this.recentUneffectiveFavIcons.indexOf(aURL);
+        const uneffectiveIndex = this.recentUneffectiveFavIcons.indexOf(url);
         if (uneffectiveIndex > -1)
           this.recentUneffectiveFavIcons.splice(uneffectiveIndex, 1);
-        this.recentUneffectiveFavIcons.push(aURL);
+        this.recentUneffectiveFavIcons.push(url);
         this.recentUneffectiveFavIcons = this.recentUneffectiveFavIcons.slice(-this.maxRecentEffectiveFavIcons);
 
         clear();
-        const effectiveFaviconData = this.effectiveFavIcons.get(aTab.id) ||
+        const effectiveFaviconData = this.effectiveFavIcons.get(tab.id) ||
                                    (this.sessionAPIAvailable &&
-                                    await browser.sessions.getTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON));
-        this.effectiveFavIcons.delete(aTab.id);
+                                    await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON));
+        this.effectiveFavIcons.delete(tab.id);
         if (this.sessionAPIAvailable)
-          browser.sessions.removeTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON);
-        if (!this.uneffectiveFavIcons.has(aTab.id) &&
+          browser.sessions.removeTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
+        if (!this.uneffectiveFavIcons.has(tab.id) &&
             effectiveFaviconData &&
-            effectiveFaviconData.url == aTab.url &&
+            effectiveFaviconData.url == tab.url &&
             effectiveFaviconData.favIconUrl &&
-            aURL != effectiveFaviconData.favIconUrl) {
-          this.getEffectiveURL(aTab, effectiveFaviconData.favIconUrl).then(aResolve, aError => {
+            url != effectiveFaviconData.favIconUrl) {
+          this.getEffectiveURL(tab, effectiveFaviconData.favIconUrl).then(aResolve, aError => {
             aReject(aError);
           });
         }
         else {
-          this.uneffectiveFavIcons.set(aTab.id, {
-            url:        aTab.url,
-            favIconUrl: aURL
+          this.uneffectiveFavIcons.set(tab.id, {
+            url:        tab.url,
+            favIconUrl: url
           });
           aReject(aError || new Error('No effective icon'));
         }
       });
-      const foundCache = this.recentEffectiveFavIcons.find(item => item && item.url === aURL);
+      const foundCache = this.recentEffectiveFavIcons.find(item => item && item.url === url);
       if (foundCache)
         return onLoad(foundCache);
-      if (!aURL ||
-          !this.VALID_FAVICON_PATTERN.test(aURL) ||
-          this.recentUneffectiveFavIcons.includes(aURL)) {
+      if (!url ||
+          !this.VALID_FAVICON_PATTERN.test(url) ||
+          this.recentUneffectiveFavIcons.includes(url)) {
         onError();
         return;
       }
@@ -268,7 +268,7 @@ const TabFavIconHelper = {
       loader.addEventListener('load', () => onLoad(), { once: true });
       loader.addEventListener('error', onError, { once: true });
       try {
-        loader.src = aURL;
+        loader.src = url;
       }
       catch(e) {
         onError(e);
@@ -276,14 +276,14 @@ const TabFavIconHelper = {
     });
   },
 
-  onTabCreated(aTab) {
-    this.getEffectiveURL(aTab).catch(_e => {});
+  onTabCreated(tab) {
+    this.getEffectiveURL(tab).catch(_e => {});
   },
 
-  onTabUpdated(aTabId, aChangeInfo, aTab) {
-    if (!this._hasFavIconInfo(aChangeInfo))
+  onTabUpdated(tabId, changeInfo, _tab) {
+    if (!this._hasFavIconInfo(changeInfo))
       return;
-    let timer = this._updatingTabs.get(aTabId);
+    let timer = this._updatingTabs.get(tabId);
     if (timer)
       clearTimeout(timer);
     // Updating of last effective favicon must be done after the loading
@@ -291,35 +291,35 @@ const TabFavIconHelper = {
     // some websites.
     // See also: https://github.com/piroor/treestyletab/issues/2064
     timer = setTimeout(async () => {
-      this._updatingTabs.delete(aTabId);
-      const tab = await browser.tabs.get(aTabId);
+      this._updatingTabs.delete(tabId);
+      const tab = await browser.tabs.get(tabId);
       if (!tab ||
-          (aChangeInfo.favIconUrl &&
-           tab.favIconUrl != aChangeInfo.favIconUrl) ||
-          (aChangeInfo.url &&
-           tab.url != aChangeInfo.url) ||
+          (changeInfo.favIconUrl &&
+           tab.favIconUrl != changeInfo.favIconUrl) ||
+          (changeInfo.url &&
+           tab.url != changeInfo.url) ||
           !this._hasFavIconInfo(tab))
         return; // expired
       this.getEffectiveURL(
-        aTab,
-        aChangeInfo.favIconUrl
+        tab,
+        changeInfo.favIconUrl
       ).catch(_e => {});
     }, 5000);
-    this._updatingTabs.set(aTabId, timer);
+    this._updatingTabs.set(tabId, timer);
   },
   _hasFavIconInfo(tabOrChangeInfo) {
     return 'favIconUrl' in tabOrChangeInfo;
   },
   _updatingTabs: new Map(),
 
-  onTabRemoved(aTabId, _aRemoveInfo) {
-    this.effectiveFavIcons.delete(aTabId);
-    this.uneffectiveFavIcons.delete(aTabId);
+  onTabRemoved(tabId, _removeInfo) {
+    this.effectiveFavIcons.delete(tabId);
+    this.uneffectiveFavIcons.delete(tabId);
   },
 
-  onTabDetached(aTabId, _aDetachInfo) {
-    this.effectiveFavIcons.delete(aTabId);
-    this.uneffectiveFavIcons.delete(aTabId);
+  onTabDetached(tabId, _detachInfo) {
+    this.effectiveFavIcons.delete(tabId);
+    this.uneffectiveFavIcons.delete(tabId);
   }
 };
 TabFavIconHelper.init();
