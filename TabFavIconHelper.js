@@ -200,7 +200,6 @@ const TabFavIconHelper = {
             url,
             data
           };
-          console.log(cache);
         }
         this.recentEffectiveFavIcons.push(cache);
         this.recentEffectiveFavIcons = this.recentEffectiveFavIcons.slice(-this.maxRecentEffectiveFavIcons);
