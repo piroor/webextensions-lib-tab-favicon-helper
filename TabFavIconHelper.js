@@ -49,6 +49,7 @@ const TabFavIconHelper = {
   uneffectiveFavIcons: new Map(),
   tasks: [],
   processStep: 5,
+  FAVICON_SIZE: 16,
 
   init() {
     this.onTabCreated = this.onTabCreated.bind(this);
@@ -62,6 +63,15 @@ const TabFavIconHelper = {
 
     this.onTabDetached = this.onTabDetached.bind(this);
     browser.tabs.onDetached.addListener(this.onTabDetached);
+
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = this.canvas.height = this.FAVICON_SIZE;
+    this.canvas.setAttribute('style', `
+      visibiity: hidden;
+      pointer-events: none;
+      position: fixed
+    `);
+    document.body.appendChild(this.canvas);
 
     window.addEventListener('unload', () => {
       browser.tabs.onCreated.removeListener(this.onTabCreated);
@@ -176,14 +186,29 @@ const TabFavIconHelper = {
         loader = onLoad = onError = undefined;
       });
 
-      onLoad = (() => {
+      onLoad = ((cache) => {
         const uneffectiveIndex = this.recentUneffectiveFavIcons.indexOf(aURL);
         if (uneffectiveIndex > -1)
           this.recentUneffectiveFavIcons.splice(uneffectiveIndex, 1);
-        const effectiveIndex = this.recentEffectiveFavIcons.indexOf(aURL);
-        if (effectiveIndex > -1)
+        const effectiveIndex = this.recentEffectiveFavIcons.findIndex(item => item && item.url === aURL);
+        if (effectiveIndex > -1) {
           this.recentEffectiveFavIcons.splice(effectiveIndex, 1);
-        this.recentEffectiveFavIcons.push(aURL);
+        }
+        else {
+          let data = null;
+          if (!aURL.startsWith('data:')) {
+            const context = this.canvas.getContext('2d');
+            context.clearRect(0, 0, this.FAVICON_SIZE, this.FAVICON_SIZE);
+            context.drawImage(loader, 0, 0, this.FAVICON_SIZE, this.FAVICON_SIZE);
+            data = this.canvas.toDataURL('image/png');
+          }
+          cache = {
+            url: aURL,
+            data
+          };
+          console.log(cache);
+        }
+        this.recentEffectiveFavIcons.push(cache);
         this.recentEffectiveFavIcons = this.recentEffectiveFavIcons.slice(-this.maxRecentEffectiveFavIcons);
 
         const oldData = this.effectiveFavIcons.get(aTab.id);
@@ -199,11 +224,11 @@ const TabFavIconHelper = {
             browser.sessions.setTabValue(aTab.id, this.LAST_EFFECTIVE_FAVICON, lastEffectiveFavicon);
         }
         this.uneffectiveFavIcons.delete(aTab.id);
-        aResolve(aURL);
+        aResolve(cache && cache.data || aURL);
         clear();
       });
       onError = (async (aError) => {
-        const effectiveIndex = this.recentEffectiveFavIcons.indexOf(aURL);
+        const effectiveIndex = this.recentEffectiveFavIcons.findIndex(item => item && item.url === aURL);
         if (effectiveIndex > -1)
           this.recentEffectiveFavIcons.splice(effectiveIndex, 1);
         const uneffectiveIndex = this.recentUneffectiveFavIcons.indexOf(aURL);
@@ -236,8 +261,9 @@ const TabFavIconHelper = {
           aReject(aError || new Error('No effective icon'));
         }
       });
-      if (this.recentEffectiveFavIcons.includes(aURL))
-        return onLoad();
+      const foundCache = this.recentEffectiveFavIcons.find(item => item && item.url === aURL);
+      if (foundCache)
+        return onLoad(foundCache);
       if (!aURL ||
           !this.VALID_FAVICON_PATTERN.test(aURL) ||
           this.recentUneffectiveFavIcons.includes(aURL)) {
@@ -245,7 +271,7 @@ const TabFavIconHelper = {
         return;
       }
       loader = new Image();
-      loader.addEventListener('load', onLoad, { once: true });
+      loader.addEventListener('load', () => onLoad(), { once: true });
       loader.addEventListener('error', onError, { once: true });
       try {
         loader.src = aURL;
