@@ -194,7 +194,12 @@ const TabFavIconHelper = {
             const context = this.canvas.getContext('2d');
             context.clearRect(0, 0, this.FAVICON_SIZE, this.FAVICON_SIZE);
             context.drawImage(loader, 0, 0, this.FAVICON_SIZE, this.FAVICON_SIZE);
-            data = this.canvas.toDataURL('image/png');
+            try {
+              data = this.canvas.toDataURL('image/png');
+            }
+            catch(_e) {
+              // it can fail due to security reasons
+            }
           }
           cache = {
             url,
