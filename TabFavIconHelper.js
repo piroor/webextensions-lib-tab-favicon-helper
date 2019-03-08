@@ -66,7 +66,7 @@ const TabFavIconHelper = {
     this.canvas = document.createElement('canvas');
     this.canvas.width = this.canvas.height = this.FAVICON_SIZE;
     this.canvas.setAttribute('style', `
-      visibiity: hidden;
+      visibility: hidden;
       pointer-events: none;
       position: fixed
     `);
