@@ -40,6 +40,13 @@ const TabFavIconHelper = {
   <path fill="context-fill" fill-opacity="context-fill-opacity" d="M15 7h-2.1a4.967 4.967 0 0 0-.732-1.753l1.49-1.49a1 1 0 0 0-1.414-1.414l-1.49 1.49A4.968 4.968 0 0 0 9 3.1V1a1 1 0 0 0-2 0v2.1a4.968 4.968 0 0 0-1.753.732l-1.49-1.49a1 1 0 0 0-1.414 1.415l1.49 1.49A4.967 4.967 0 0 0 3.1 7H1a1 1 0 0 0 0 2h2.1a4.968 4.968 0 0 0 .737 1.763c-.014.013-.032.017-.045.03l-1.45 1.45a1 1 0 1 0 1.414 1.414l1.45-1.45c.013-.013.018-.031.03-.045A4.968 4.968 0 0 0 7 12.9V15a1 1 0 0 0 2 0v-2.1a4.968 4.968 0 0 0 1.753-.732l1.49 1.49a1 1 0 0 0 1.414-1.414l-1.49-1.49A4.967 4.967 0 0 0 12.9 9H15a1 1 0 0 0 0-2zM5 8a3 3 0 1 1 3 3 3 3 0 0 1-3-3z"/>
 </svg>
 `,
+  // original: chrome://global/skin/icons/performance.svg
+  FAVICON_PERFORMANCE: `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <path fill="context-fill" d="M8 1a8 8 0 0 0-8 8 7.89 7.89 0 0 0 .78 3.43 1 1 0 0 0 .9.57.94.94 0 0 0 .43-.1 1 1 0 0 0 .47-1.33A6.07 6.07 0 0 1 2 9a6 6 0 0 1 12 0 5.93 5.93 0 0 1-.59 2.57 1 1 0 0 0 1.81.86A7.89 7.89 0 0 0 16 9a8 8 0 0 0-8-8z"/>
+  <path fill="context-fill" d="M11.77 7.08a.5.5 0 0 0-.69.15L8.62 11.1A2.12 2.12 0 0 0 8 11a2 2 0 0 0 0 4 2.05 2.05 0 0 0 1.12-.34 2.31 2.31 0 0 0 .54-.54 2 2 0 0 0 0-2.24 2.31 2.31 0 0 0-.2-.24l2.46-3.87a.5.5 0 0 0-.15-.69z"/>
+</svg>
+`,
 
   recentEffectiveFavIcons: [],
   recentUneffectiveFavIcons: [],
@@ -135,6 +142,8 @@ const TabFavIconHelper = {
         return this.getSVGDataURI(this.FAVICON_SETTINGS);
       case 'chrome://mozapps/skin/extensions/extensionGeneric-16.svg':
         return this.getSVGDataURI(this.FAVICON_EXTENSION);
+      case 'chrome://global/skin/icons/performance.svg':
+        return this.getSVGDataURI(this.FAVICON_PERFORMANCE);
       case 'chrome://browser/skin/privatebrowsing/favicon.svg':
         return this.getSVGDataURI(this.FAVICON_PRIVATE_BROWSING);
       default:
