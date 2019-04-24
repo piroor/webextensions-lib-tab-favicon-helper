@@ -12,6 +12,7 @@
 const TabFavIconHelper = {
   LAST_EFFECTIVE_FAVICON: 'last-effective-favIcon',
   VALID_FAVICON_PATTERN: /^(about|app|chrome|data|file|ftp|https?|moz-extension|resource):/,
+  DRAWABLE_FAVICON_PATTERN: /^(https?|moz-extension|resource):/,
 
   // original: chrome://mozapps/skin/extensions/extensionGeneric-16.svg
   FAVICON_EXTENSION: `
@@ -199,7 +200,7 @@ const TabFavIconHelper = {
         }
         else {
           let data = null;
-          if (!url.startsWith('data:')) {
+          if (this.DRAWABLE_FAVICON_PATTERN.test(url)) {
             const context = this.canvas.getContext('2d');
             context.clearRect(0, 0, this.FAVICON_SIZE, this.FAVICON_SIZE);
             context.drawImage(loader, 0, 0, this.FAVICON_SIZE, this.FAVICON_SIZE);
