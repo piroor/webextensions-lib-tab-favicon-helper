@@ -288,6 +288,7 @@ const TabFavIconHelper = {
         return;
       }
       loader = new Image();
+      loader.crossOrigin = 'anonymous';
       loader.addEventListener('load', () => onLoad(), { once: true });
       loader.addEventListener('error', onError, { once: true });
       try {
