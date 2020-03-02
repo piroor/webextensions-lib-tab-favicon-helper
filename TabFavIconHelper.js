@@ -159,7 +159,7 @@ const TabFavIconHelper = {
       default:
         if (/^chrome:\/\//.test(url) &&
             !/^chrome:\/\/branding\//.test(url))
-          return this.getSVGDataURI(this.FAVICON_PRIVATE_GLOBE);
+          return this.getSVGDataURI(this.FAVICON_GLOBE);
         break;
     }
     return url;
