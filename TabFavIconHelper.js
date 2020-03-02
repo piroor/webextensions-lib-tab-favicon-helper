@@ -48,6 +48,12 @@ const TabFavIconHelper = {
   <path fill="context-fill" d="M11.77 7.08a.5.5 0 0 0-.69.15L8.62 11.1A2.12 2.12 0 0 0 8 11a2 2 0 0 0 0 4 2.05 2.05 0 0 0 1.12-.34 2.31 2.31 0 0 0 .54-.54 2 2 0 0 0 0-2.24 2.31 2.31 0 0 0-.2-.24l2.46-3.87a.5.5 0 0 0-.15-.69z"/>
 </svg>
 `,
+  // original: chrome://browser/skin/window.svg
+  FAVICON_WINDOW: `
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <path fill="context-fill" fill-opacity="context-fill-opacity" d="M13 1H3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h11a2 2 0 0 0 2-2V4a3 3 0 0 0-3-3zm1 11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6h12zm0-7H2V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1z"/>
+</svg>
+`,
   // original: chrome://browser/skin/developer.svg
   FAVICON_DEVELOPER: `
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
@@ -154,6 +160,8 @@ const TabFavIconHelper = {
         return this.getSVGDataURI(this.FAVICON_PERFORMANCE);
       case 'chrome://browser/skin/developer.svg':
         return this.getSVGDataURI(this.FAVICON_DEVELOPER);
+      case 'chrome://browser/skin/window.svg':
+        return this.getSVGDataURI(this.FAVICON_WINDOW);
       case 'chrome://browser/skin/privatebrowsing/favicon.svg':
         return this.getSVGDataURI(this.FAVICON_PRIVATE_BROWSING);
       default:
