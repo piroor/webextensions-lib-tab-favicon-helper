@@ -177,7 +177,11 @@ const TabFavIconHelper = {
   },
 
   async getLastEffectiveFavIconURL(tab) {
-    const lastData = await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
+    let lastData = this.effectiveFavIcons.get(tab.id);
+    if (lastData === undefined && this.sessionAPIAvailable) {
+      lastData = await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
+      this.effectiveFavIcons.set(tab.id, lastData || null);   // NOTE: null is valid cache entry here
+    }
     if (lastData &&
         lastData.url == tab.url)
       return lastData.favIconUrl;
