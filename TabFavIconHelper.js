@@ -59,7 +59,12 @@ const TabFavIconHelper = {
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
   <path fill="context-fill" fill-opacity="context-fill-opacity" d="M14.555 3.2l-2.434 2.436a1.243 1.243 0 1 1-1.757-1.757L12.8 1.445A3.956 3.956 0 0 0 11 1a3.976 3.976 0 0 0-3.434 6.02l-6.273 6.273a1 1 0 1 0 1.414 1.414L8.98 8.434A3.96 3.96 0 0 0 11 9a4 4 0 0 0 4-4 3.956 3.956 0 0 0-.445-1.8z"/>
 </svg>
-
+`,
+  // original: chrome://global/skin/icons/warning.svg
+  FAVICON_WARNING: `
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <path fill="context-fill" fill-opacity="context-fill-opacity" d="M14.742 12.106L9.789 2.2a2 2 0 0 0-3.578 0l-4.953 9.91A2 2 0 0 0 3.047 15h9.905a2 2 0 0 0 1.79-2.894zM7 5a1 1 0 0 1 2 0v4a1 1 0 0 1-2 0zm1 8.25A1.25 1.25 0 1 1 9.25 12 1.25 1.25 0 0 1 8 13.25z"/>
+</svg>
 `,
 
   recentEffectiveFavIcons: [],
@@ -164,6 +169,8 @@ const TabFavIconHelper = {
         return this.getSVGDataURI(this.FAVICON_WINDOW);
       case 'chrome://browser/skin/privatebrowsing/favicon.svg':
         return this.getSVGDataURI(this.FAVICON_PRIVATE_BROWSING);
+      case 'chrome://global/skin/icons/warning.svg':
+        return this.getSVGDataURI(this.FAVICON_WARNING);
       default:
         if (/^chrome:\/\//.test(url) &&
             !/^chrome:\/\/branding\//.test(url))
