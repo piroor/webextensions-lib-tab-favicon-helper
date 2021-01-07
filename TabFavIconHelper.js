@@ -14,16 +14,10 @@ const TabFavIconHelper = {
   VALID_FAVICON_PATTERN: /^(about|app|chrome|data|file|ftp|https?|moz-extension|resource):/,
   DRAWABLE_FAVICON_PATTERN: /^(https?|moz-extension|resource):/,
 
-  // original: chrome://mozapps/skin/extensions/extensionGeneric-16.svg
-  FAVICON_EXTENSION: `
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="context-fill" fill-opacity="context-fill-opacity">
-  <path d="M14.5 8c-.971 0-1 1-1.75 1a.765.765 0 0 1-.75-.75V5a1 1 0 0 0-1-1H7.75A.765.765 0 0 1 7 3.25c0-.75 1-.779 1-1.75C8 .635 7.1 0 6 0S4 .635 4 1.5c0 .971 1 1 1 1.75a.765.765 0 0 1-.75.75H1a1 1 0 0 0-1 1v2.25A.765.765 0 0 0 .75 8c.75 0 .779-1 1.75-1C3.365 7 4 7.9 4 9s-.635 2-1.5 2c-.971 0-1-1-1.75-1a.765.765 0 0 0-.75.75V15a1 1 0 0 0 1 1h3.25a.765.765 0 0 0 .75-.75c0-.75-1-.779-1-1.75 0-.865.9-1.5 2-1.5s2 .635 2 1.5c0 .971-1 1-1 1.75a.765.765 0 0 0 .75.75H11a1 1 0 0 0 1-1v-3.25a.765.765 0 0 1 .75-.75c.75 0 .779 1 1.75 1 .865 0 1.5-.9 1.5-2s-.635-2-1.5-2z"/>
-</svg>
-`,
-  // original: globe-16.svg
-  FAVICON_GLOBE: `
+  // original: chrome://browser/skin/developer.svg
+  FAVICON_DEVELOPER: `
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <path fill="context-fill" d="M8 0a8 8 0 1 0 8 8 8.009 8.009 0 0 0-8-8zm5.163 4.958h-1.552a7.7 7.7 0 0 0-1.051-2.376 6.03 6.03 0 0 1 2.603 2.376zM14 8a5.963 5.963 0 0 1-.335 1.958h-1.821A12.327 12.327 0 0 0 12 8a12.327 12.327 0 0 0-.156-1.958h1.821A5.963 5.963 0 0 1 14 8zm-6 6c-1.075 0-2.037-1.2-2.567-2.958h5.135C10.037 12.8 9.075 14 8 14zM5.174 9.958a11.084 11.084 0 0 1 0-3.916h5.651A11.114 11.114 0 0 1 11 8a11.114 11.114 0 0 1-.174 1.958zM2 8a5.963 5.963 0 0 1 .335-1.958h1.821a12.361 12.361 0 0 0 0 3.916H2.335A5.963 5.963 0 0 1 2 8zm6-6c1.075 0 2.037 1.2 2.567 2.958H5.433C5.963 3.2 6.925 2 8 2zm-2.56.582a7.7 7.7 0 0 0-1.051 2.376H2.837A6.03 6.03 0 0 1 5.44 2.582zm-2.6 8.46h1.549a7.7 7.7 0 0 0 1.051 2.376 6.03 6.03 0 0 1-2.603-2.376zm7.723 2.376a7.7 7.7 0 0 0 1.051-2.376h1.552a6.03 6.03 0 0 1-2.606 2.376z"/>
+  <path fill="context-fill" fill-opacity="context-fill-opacity" d="M14.555 3.2l-2.434 2.436a1.243 1.243 0 1 1-1.757-1.757L12.8 1.445A3.956 3.956 0 0 0 11 1a3.976 3.976 0 0 0-3.434 6.02l-6.273 6.273a1 1 0 1 0 1.414 1.414L8.98 8.434A3.96 3.96 0 0 0 11 9a4 4 0 0 0 4-4 3.956 3.956 0 0 0-.445-1.8z"/>
 </svg>
 `,
   // original: chrome://browser/skin/privatebrowsing/favicon.svg
@@ -41,6 +35,12 @@ const TabFavIconHelper = {
   <path fill="context-fill" fill-opacity="context-fill-opacity" d="M15 7h-2.1a4.967 4.967 0 0 0-.732-1.753l1.49-1.49a1 1 0 0 0-1.414-1.414l-1.49 1.49A4.968 4.968 0 0 0 9 3.1V1a1 1 0 0 0-2 0v2.1a4.968 4.968 0 0 0-1.753.732l-1.49-1.49a1 1 0 0 0-1.414 1.415l1.49 1.49A4.967 4.967 0 0 0 3.1 7H1a1 1 0 0 0 0 2h2.1a4.968 4.968 0 0 0 .737 1.763c-.014.013-.032.017-.045.03l-1.45 1.45a1 1 0 1 0 1.414 1.414l1.45-1.45c.013-.013.018-.031.03-.045A4.968 4.968 0 0 0 7 12.9V15a1 1 0 0 0 2 0v-2.1a4.968 4.968 0 0 0 1.753-.732l1.49 1.49a1 1 0 0 0 1.414-1.414l-1.49-1.49A4.967 4.967 0 0 0 12.9 9H15a1 1 0 0 0 0-2zM5 8a3 3 0 1 1 3 3 3 3 0 0 1-3-3z"/>
 </svg>
 `,
+  // original: chrome://browser/skin/window.svg
+  FAVICON_WINDOW: `
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <path fill="context-fill" fill-opacity="context-fill-opacity" d="M13 1H3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h11a2 2 0 0 0 2-2V4a3 3 0 0 0-3-3zm1 11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6h12zm0-7H2V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1z"/>
+</svg>
+`,
   // original: chrome://global/skin/icons/performance.svg
   FAVICON_PERFORMANCE: `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
@@ -48,22 +48,22 @@ const TabFavIconHelper = {
   <path fill="context-fill" d="M11.77 7.08a.5.5 0 0 0-.69.15L8.62 11.1A2.12 2.12 0 0 0 8 11a2 2 0 0 0 0 4 2.05 2.05 0 0 0 1.12-.34 2.31 2.31 0 0 0 .54-.54 2 2 0 0 0 0-2.24 2.31 2.31 0 0 0-.2-.24l2.46-3.87a.5.5 0 0 0-.15-.69z"/>
 </svg>
 `,
-  // original: chrome://browser/skin/window.svg
-  FAVICON_WINDOW: `
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <path fill="context-fill" fill-opacity="context-fill-opacity" d="M13 1H3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h11a2 2 0 0 0 2-2V4a3 3 0 0 0-3-3zm1 11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6h12zm0-7H2V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1z"/>
-</svg>
-`,
-  // original: chrome://browser/skin/developer.svg
-  FAVICON_DEVELOPER: `
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <path fill="context-fill" fill-opacity="context-fill-opacity" d="M14.555 3.2l-2.434 2.436a1.243 1.243 0 1 1-1.757-1.757L12.8 1.445A3.956 3.956 0 0 0 11 1a3.976 3.976 0 0 0-3.434 6.02l-6.273 6.273a1 1 0 1 0 1.414 1.414L8.98 8.434A3.96 3.96 0 0 0 11 9a4 4 0 0 0 4-4 3.956 3.956 0 0 0-.445-1.8z"/>
-</svg>
-`,
   // original: chrome://global/skin/icons/warning.svg
   FAVICON_WARNING: `
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
   <path fill="context-fill" fill-opacity="context-fill-opacity" d="M14.742 12.106L9.789 2.2a2 2 0 0 0-3.578 0l-4.953 9.91A2 2 0 0 0 3.047 15h9.905a2 2 0 0 0 1.79-2.894zM7 5a1 1 0 0 1 2 0v4a1 1 0 0 1-2 0zm1 8.25A1.25 1.25 0 1 1 9.25 12 1.25 1.25 0 0 1 8 13.25z"/>
+</svg>
+`,
+  // original: chrome://mozapps/skin/extensions/extensionGeneric-16.svg
+  FAVICON_EXTENSION: `
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="context-fill" fill-opacity="context-fill-opacity">
+  <path d="M14.5 8c-.971 0-1 1-1.75 1a.765.765 0 0 1-.75-.75V5a1 1 0 0 0-1-1H7.75A.765.765 0 0 1 7 3.25c0-.75 1-.779 1-1.75C8 .635 7.1 0 6 0S4 .635 4 1.5c0 .971 1 1 1 1.75a.765.765 0 0 1-.75.75H1a1 1 0 0 0-1 1v2.25A.765.765 0 0 0 .75 8c.75 0 .779-1 1.75-1C3.365 7 4 7.9 4 9s-.635 2-1.5 2c-.971 0-1-1-1.75-1a.765.765 0 0 0-.75.75V15a1 1 0 0 0 1 1h3.25a.765.765 0 0 0 .75-.75c0-.75-1-.779-1-1.75 0-.865.9-1.5 2-1.5s2 .635 2 1.5c0 .971-1 1-1 1.75a.765.765 0 0 0 .75.75H11a1 1 0 0 0 1-1v-3.25a.765.765 0 0 1 .75-.75c.75 0 .779 1 1.75 1 .865 0 1.5-.9 1.5-2s-.635-2-1.5-2z"/>
+</svg>
+`,
+  // original: globe-16.svg
+  FAVICON_GLOBE: `
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <path fill="context-fill" d="M8 0a8 8 0 1 0 8 8 8.009 8.009 0 0 0-8-8zm5.163 4.958h-1.552a7.7 7.7 0 0 0-1.051-2.376 6.03 6.03 0 0 1 2.603 2.376zM14 8a5.963 5.963 0 0 1-.335 1.958h-1.821A12.327 12.327 0 0 0 12 8a12.327 12.327 0 0 0-.156-1.958h1.821A5.963 5.963 0 0 1 14 8zm-6 6c-1.075 0-2.037-1.2-2.567-2.958h5.135C10.037 12.8 9.075 14 8 14zM5.174 9.958a11.084 11.084 0 0 1 0-3.916h5.651A11.114 11.114 0 0 1 11 8a11.114 11.114 0 0 1-.174 1.958zM2 8a5.963 5.963 0 0 1 .335-1.958h1.821a12.361 12.361 0 0 0 0 3.916H2.335A5.963 5.963 0 0 1 2 8zm6-6c1.075 0 2.037 1.2 2.567 2.958H5.433C5.963 3.2 6.925 2 8 2zm-2.56.582a7.7 7.7 0 0 0-1.051 2.376H2.837A6.03 6.03 0 0 1 5.44 2.582zm-2.6 8.46h1.549a7.7 7.7 0 0 0 1.051 2.376 6.03 6.03 0 0 1-2.603-2.376zm7.723 2.376a7.7 7.7 0 0 0 1.051-2.376h1.552a6.03 6.03 0 0 1-2.606 2.376z"/>
 </svg>
 `,
 
@@ -157,20 +157,20 @@ const TabFavIconHelper = {
 
   getSafeFaviconUrl(url) {
     switch (url) {
-      case 'chrome://browser/skin/settings.svg':
-        return this.getSVGDataURI(this.FAVICON_SETTINGS);
-      case 'chrome://mozapps/skin/extensions/extensionGeneric-16.svg':
-        return this.getSVGDataURI(this.FAVICON_EXTENSION);
-      case 'chrome://global/skin/icons/performance.svg':
-        return this.getSVGDataURI(this.FAVICON_PERFORMANCE);
       case 'chrome://browser/skin/developer.svg':
         return this.getSVGDataURI(this.FAVICON_DEVELOPER);
-      case 'chrome://browser/skin/window.svg':
-        return this.getSVGDataURI(this.FAVICON_WINDOW);
       case 'chrome://browser/skin/privatebrowsing/favicon.svg':
         return this.getSVGDataURI(this.FAVICON_PRIVATE_BROWSING);
+      case 'chrome://browser/skin/settings.svg':
+        return this.getSVGDataURI(this.FAVICON_SETTINGS);
+      case 'chrome://browser/skin/window.svg':
+        return this.getSVGDataURI(this.FAVICON_WINDOW);
+      case 'chrome://global/skin/icons/performance.svg':
+        return this.getSVGDataURI(this.FAVICON_PERFORMANCE);
       case 'chrome://global/skin/icons/warning.svg':
         return this.getSVGDataURI(this.FAVICON_WARNING);
+      case 'chrome://mozapps/skin/extensions/extensionGeneric-16.svg':
+        return this.getSVGDataURI(this.FAVICON_EXTENSION);
       default:
         if (/^chrome:\/\//.test(url) &&
             !/^chrome:\/\/branding\//.test(url))
