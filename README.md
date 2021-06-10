@@ -1,6 +1,6 @@
 # webextensions-lib-tab-favicon-helper
 
-[![Build Status](https://travis-ci.org/piroor/webextensions-lib-tab-favicon-helper.svg?branch=trunk)](https://travis-ci.org/piroor/webextensions-lib-tab-favicon-helper)
+![Build Status](https://github.com/piroor/webextensions-lib-tab-favicon-helper/actions/workflows/main.yml/badge.svg?branch=trunk)
 
 Helps to show favicon image from tabs.Tab.
 
