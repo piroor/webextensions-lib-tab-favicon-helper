@@ -131,6 +131,13 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   maxRecentEffectiveFavIcons: 30,
   effectiveFavIcons: new Map(),
   uneffectiveFavIcons: new Map(),
+
+  // Firefox's JS engine unexpectedly allocates RAM for each string instance even if they are quite same favicon URL.
+  // Thus you'll see 4MB RAM usage if there are 8 tabs with 500KB favicon.
+  // We need to recycle same primitive string if possible to reduce RAM usage.
+  sharedFavIcons: new Map(),
+  tabIdsFromFavIcon: new Map(),
+
   tasks: [],
   processStep: 5,
   FAVICON_SIZE: 16,
@@ -244,7 +251,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
           return this.getSVGDataURI(this.FAVICON_GLOBE);
         break;
     }
-    return url;
+    return this.sharedFavIcons.get(url) || url;
   },
   getSVGDataURI(svg) {
     return `data:image/svg+xml,${encodeURIComponent(svg.trim())}`;
@@ -254,11 +261,14 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     let lastData = this.effectiveFavIcons.get(tab.id);
     if (lastData === undefined && this.sessionAPIAvailable) {
       lastData = await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
+      if (lastData &&
+          this.sharedFavIcons.get.has(lastData.favIconUrl))
+        lastData.favIconUrl = this.sharedFavIcons.get(lastData.favIconUrl);
       this.effectiveFavIcons.set(tab.id, lastData || null);   // NOTE: null is valid cache entry here
     }
     if (lastData &&
         lastData.url == tab.url)
-      return lastData.favIconUrl;
+      return this.sharedFavIcons.get(lastData.favIconUrl) || lastData.favIconUrl;
     return null;
   },
 
@@ -272,8 +282,11 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
             this.sessionAPIAvailable)
           lastData = await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
         if (lastData &&
-            lastData.url == tab.url)
+            lastData.url == tab.url) {
           url = lastData.favIconUrl;
+          if (this.sharedFavIcons.has(url))
+            lastData.favIconUrl = url = this.sharedFavIcons.get(url);
+        }
       }
 
       let loader, onLoad, onError;
@@ -318,6 +331,10 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         if (!oldData ||
             oldData.url != tab.url ||
             oldData.favIconUrl != url) {
+          if (this.sharedFavIcons.has(url))
+            url = this.sharedFavIcons.get(url);
+          else
+            this.sharedFavIcons.set(url, url);
           const lastEffectiveFavicon = {
             url:        tab.url,
             favIconUrl: url
@@ -327,7 +344,10 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
             browser.sessions.setTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON, lastEffectiveFavicon);
         }
         this.uneffectiveFavIcons.delete(tab.id);
-        aResolve(cache && cache.data || url);
+        const finalUrl = cache && cache.data || url;
+        if (!this.sharedFavIcons.has(finalUrl))
+          this.sharedFavIcons.set(finalUrl, finalUrl);
+        aResolve(this.sharedFavIcons.get(finalUrl));
         clear();
       });
       onError = (async (aError) => {
@@ -357,6 +377,10 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
           });
         }
         else {
+          if (this.sharedFavIcons.has(url))
+            url = this.sharedFavIcons.get(url);
+          else
+            this.sharedFavIcons.set(url, url);
           this.uneffectiveFavIcons.set(tab.id, {
             url:        tab.url,
             favIconUrl: url
@@ -387,8 +411,14 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     });
   },
 
-  onTabCreated(tab) {
-    this.getEffectiveURL(tab).catch(_e => {});
+  async onTabCreated(tab) {
+    const url = await this.getEffectiveURL(tab).catch(_e => {});
+    if (!url)
+      return;
+
+    const ids = this.tabIdsFromFavIcon.get(url) || new Set();
+    ids.add(tab.id);
+    this.tabIdsFromFavIcon.set(url, ids);
   },
 
   onTabUpdated(tabId, changeInfo, _tab) {
@@ -411,10 +441,29 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
            tab.url != changeInfo.url) ||
           !this._hasFavIconInfo(tab))
         return; // expired
-      this.getEffectiveURL(
+
+      const oldData = this.effectiveFavIcons.get(tabId);
+      const oldUrl = oldData && oldData.favIconUrl;
+      const oldIds = this.tabIdsFromFavIcon.get(oldUrl);
+      if (oldIds) {
+        oldIds.delete(tabId);
+        if (oldIds.size == 0) {
+          this.tabIdsFromFavIcon.delete(oldUrl);
+          this.tabIdsFromFavIcon.delete(oldUrl);
+        }
+      }
+
+      const url = await this.getEffectiveURL(
         tab,
         changeInfo.favIconUrl
       ).catch(_e => {});
+
+      if (!url)
+        return;
+
+      const ids = this.tabIdsFromFavIcon.get(url) || new Set();
+      ids.add(tabId);
+      this.tabIdsFromFavIcon.set(url, ids);
     }, 5000);
     this._updatingTabs.set(tabId, timer);
   },
@@ -424,13 +473,33 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   _updatingTabs: new Map(),
 
   onTabRemoved(tabId, _removeInfo) {
+    this.tryForgetFavIcon(tabId);
     this.effectiveFavIcons.delete(tabId);
     this.uneffectiveFavIcons.delete(tabId);
   },
 
   onTabDetached(tabId, _detachInfo) {
+    this.tryForgetFavIcon(tabId);
     this.effectiveFavIcons.delete(tabId);
     this.uneffectiveFavIcons.delete(tabId);
-  }
+  },
+
+  tryForgetFavIcon(tabId) {
+    const lastData = this.effectiveFavIcons.get(tabId);
+    const favIconUrl = lastData && lastData.favIconUrl;
+    if (!favIconUrl)
+      return;
+
+    const ids = this.tabIdsFromFavIcon.get(favIconUrl);
+    if (!ids)
+      return;
+
+    ids.delete(tabId);
+    if (ids.size > 0)
+      return;
+
+    this.sharedFavIcons.delete(favIconUrl);
+    this.tabIdsFromFavIcon.delete(favIconUrl);
+  },
 };
 TabFavIconHelper.init();
