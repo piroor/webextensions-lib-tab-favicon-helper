@@ -262,7 +262,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     if (lastData === undefined && this.sessionAPIAvailable) {
       lastData = await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
       if (lastData &&
-          this.sharedFavIcons.get.has(lastData.favIconUrl))
+          this.sharedFavIcons.has(lastData.favIconUrl))
         lastData.favIconUrl = this.sharedFavIcons.get(lastData.favIconUrl);
       this.effectiveFavIcons.set(tab.id, lastData || null);   // NOTE: null is valid cache entry here
     }
