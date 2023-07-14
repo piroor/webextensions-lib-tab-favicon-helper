@@ -195,6 +195,9 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
       transaction.oncomplete = () => {
         //db.close();
         this._reserveToExpireOldEntries();
+        favIconUrl = undefined;
+        tabUrl = undefined;
+        store = undefined;
       };
     }
     catch(error) {
@@ -211,6 +214,8 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
       transaction.oncomplete = () => {
         //db.close();
         this._reserveToExpireOldEntries();
+        tabUrl = undefined;
+        store = undefined;
       };
     }
     catch(error) {
@@ -238,7 +243,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
 
           const favIconRequest = favIconStore.get(association.favIconKey);
           favIconRequest.onsuccess = () => {
-            const favIcon = favIconRequest.result;
+            let favIcon = favIconRequest.result;
             if (!favIcon) {
               //console.log(`FavIcon data not found for the tabUrl ${tabUrl} in the store ${store}`);
               resolve(null);
@@ -251,11 +256,15 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
               return;
             }
             resolve(favIcon.url);
+            favIcon.url = undefined;
+            favIcon = undefined;
           };
         };
 
         transaction.oncomplete = () => {
           //db.close();
+          tabUrl = undefined;
+          store = undefined;
         };
       }
       catch(error) {
@@ -390,6 +399,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         .then(url => {
           params.image.src = url;
           params.image.classList.remove('error');
+          url = undefined;
         },
               _error => {
                 params.image.src = '';
@@ -471,7 +481,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
           loader.removeEventListener('load', onLoad, { once: true });
           loader.removeEventListener('error', onError, { once: true });
         }
-        loader = onLoad = onError = undefined;
+        loader = onLoad = onError = favIconUrl = storedFavIconUrl = undefined;
       });
 
       onLoad = async foundFavIconUrl => {
