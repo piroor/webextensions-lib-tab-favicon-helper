@@ -505,4 +505,4 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     this._tabIdsFromFavIcon.delete(favIconUrl);
   },
 };
-TabFavIconHelper._init();
+TabFavIconHelper._init(); // eslint-disable-line no-underscore-dangle
