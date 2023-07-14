@@ -132,12 +132,6 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   _effectiveFavIcons: new Map(),
   _uneffectiveFavIcons: new Map(),
 
-  // Firefox's JS engine unexpectedly allocates RAM for each string instance even if they are quite same favicon URL.
-  // Thus you'll see 4MB RAM usage if there are 8 tabs with 500KB favicon.
-  // We need to recycle same primitive string if possible to reduce RAM usage.
-  _sharedFavIcons: new Map(),
-  _tabIdsFromFavIcon: new Map(),
-
   _tasks: [],
   _processStep: 5,
   FAVICON_SIZE: 16,
@@ -148,12 +142,6 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
 
     this._onTabUpdated = this._onTabUpdated.bind(this);
     browser.tabs.onUpdated.addListener(this._onTabUpdated);
-
-    this._onTabRemoved = this._onTabRemoved.bind(this);
-    browser.tabs.onRemoved.addListener(this._onTabRemoved);
-
-    this._onTabDetached = this._onTabDetached.bind(this);
-    browser.tabs.onDetached.addListener(this._onTabDetached);
 
     this.canvas = document.createElement('canvas');
     this.canvas.width = this.canvas.height = this.FAVICON_SIZE;
@@ -167,8 +155,6 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     window.addEventListener('unload', () => {
       browser.tabs.onCreated.removeListener(this._onTabCreated);
       browser.tabs.onUpdated.removeListener(this._onTabUpdated);
-      browser.tabs.onRemoved.removeListener(this._onTabRemoved);
-      browser.tabs.onDetached.removeListener(this._onTabDetached);
     }, { once: true });
   },
 
@@ -253,7 +239,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
           return this._getSVGDataURI(this.FAVICON_GLOBE);
         break;
     }
-    return this._sharedFavIcons.get(url) || url;
+    return url;
   },
   _getSVGDataURI(svg) {
     return `data:image/svg+xml,${encodeURIComponent(svg.trim())}`;
@@ -264,14 +250,11 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     let lastData = this._effectiveFavIcons.get(tab.id);
     if (lastData === undefined && this._sessionAPIAvailable) {
       lastData = await browser.sessions.getTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
-      if (lastData &&
-          this._sharedFavIcons.has(lastData.favIconUrl))
-        lastData.favIconUrl = this._sharedFavIcons.get(lastData.favIconUrl);
       this._effectiveFavIcons.set(tab.id, lastData || null);   // NOTE: null is valid cache entry here
     }
     if (lastData &&
         lastData.url == tab.url)
-      return this._sharedFavIcons.get(lastData.favIconUrl) || lastData.favIconUrl;
+      return lastData.favIconUrl;
     return null;
   },
 
@@ -287,8 +270,6 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         if (lastData &&
             lastData.url == tab.url) {
           url = lastData.favIconUrl;
-          if (this._sharedFavIcons.has(url))
-            lastData.favIconUrl = url = this._sharedFavIcons.get(url);
         }
       }
 
@@ -334,10 +315,6 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         if (!oldData ||
             oldData.url != tab.url ||
             oldData.favIconUrl != url) {
-          if (this._sharedFavIcons.has(url))
-            url = this._sharedFavIcons.get(url);
-          else
-            this._sharedFavIcons.set(url, url);
           const lastEffectiveFavicon = {
             url:        tab.url,
             favIconUrl: url
@@ -348,9 +325,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         }
         this._uneffectiveFavIcons.delete(tab.id);
         const finalUrl = cache && cache.data || url;
-        if (!this._sharedFavIcons.has(finalUrl))
-          this._sharedFavIcons.set(finalUrl, finalUrl);
-        aResolve(this._sharedFavIcons.get(finalUrl));
+        aResolve(finalUrl);
         clear();
       });
       onError = (async (aError) => {
@@ -380,10 +355,6 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
           });
         }
         else {
-          if (this._sharedFavIcons.has(url))
-            url = this._sharedFavIcons.get(url);
-          else
-            this._sharedFavIcons.set(url, url);
           this._uneffectiveFavIcons.set(tab.id, {
             url:        tab.url,
             favIconUrl: url
@@ -414,16 +385,6 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     });
   },
 
-  async _onTabCreated(tab) {
-    const url = await this._getEffectiveURL(tab).catch(_e => {});
-    if (!url)
-      return;
-
-    const ids = this._tabIdsFromFavIcon.get(url) || new Set();
-    ids.add(tab.id);
-    this._tabIdsFromFavIcon.set(url, ids);
-  },
-
   _onTabUpdated(tabId, changeInfo, _tab) {
     if (!this._hasFavIconInfo(changeInfo))
       return;
@@ -445,28 +406,10 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
           !this._hasFavIconInfo(tab))
         return; // expired
 
-      const oldData = this._effectiveFavIcons.get(tabId);
-      const oldUrl = oldData && oldData.favIconUrl;
-      const oldIds = this._tabIdsFromFavIcon.get(oldUrl);
-      if (oldIds) {
-        oldIds.delete(tabId);
-        if (oldIds.size == 0) {
-          this._tabIdsFromFavIcon.delete(oldUrl);
-          this._tabIdsFromFavIcon.delete(oldUrl);
-        }
-      }
-
-      const url = await this._getEffectiveURL(
+      await this._getEffectiveURL(
         tab,
         changeInfo.favIconUrl
       ).catch(_e => {});
-
-      if (!url)
-        return;
-
-      const ids = this._tabIdsFromFavIcon.get(url) || new Set();
-      ids.add(tabId);
-      this._tabIdsFromFavIcon.set(url, ids);
     }, 5000);
     this._updatingTabs.set(tabId, timer);
   },
@@ -474,35 +417,5 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     return 'favIconUrl' in tabOrChangeInfo;
   },
   _updatingTabs: new Map(),
-
-  _onTabRemoved(tabId, _removeInfo) {
-    this._tryForgetFavIcon(tabId);
-    this._effectiveFavIcons.delete(tabId);
-    this._uneffectiveFavIcons.delete(tabId);
-  },
-
-  _onTabDetached(tabId, _detachInfo) {
-    this._tryForgetFavIcon(tabId);
-    this._effectiveFavIcons.delete(tabId);
-    this._uneffectiveFavIcons.delete(tabId);
-  },
-
-  _tryForgetFavIcon(tabId) {
-    const lastData = this._effectiveFavIcons.get(tabId);
-    const favIconUrl = lastData && lastData.favIconUrl;
-    if (!favIconUrl)
-      return;
-
-    const ids = this._tabIdsFromFavIcon.get(favIconUrl);
-    if (!ids)
-      return;
-
-    ids.delete(tabId);
-    if (ids.size > 0)
-      return;
-
-    this._sharedFavIcons.delete(favIconUrl);
-    this._tabIdsFromFavIcon.delete(favIconUrl);
-  },
 };
 TabFavIconHelper._init(); // eslint-disable-line no-underscore-dangle
