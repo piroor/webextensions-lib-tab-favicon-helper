@@ -147,11 +147,14 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   async _openDB() {
     if (this._openedDB)
       return this._openedDB;
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
 
       request.onerror = () => {
-        reject(new Error('Failed to open database'));
+        // This can fail if this is in a private window.
+        // See: https://github.com/piroor/treestyletab/issues/3387
+        //reject(new Error('Failed to open database'));
+        resolve(null);
       };
 
       request.onsuccess = () => {
@@ -183,6 +186,9 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
       this._openDB(),
       this._urlToKey(favIconUrl),
     ]);
+    if (!db)
+      return;
+
     try {
       const transaction = db.transaction([store, this.STORE_FAVICONS], 'readwrite');
       const associationStore = transaction.objectStore(store);
@@ -207,6 +213,9 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
 
   async _unassociateFavIconUrlFromTabUrl({ tabUrl, store } = {}) {
     const db = await this._openDB();
+    if (!db)
+      return;
+
     try {
       const transaction = db.transaction([store], 'readwrite');
       const associationStore = transaction.objectStore(store);
@@ -226,6 +235,11 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   async _getAssociatedFavIconUrlFromTabUrl({ tabUrl, store } = {}) {
     return new Promise(async (resolve, _reject) => {
       const db = await this._openDB();
+      if (!db) {
+        resolve(null);
+        return;
+      }
+
       try {
         const transaction = db.transaction([store, this.STORE_FAVICONS], 'readonly');
         const associationStore = transaction.objectStore(store);
@@ -285,6 +299,11 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   async _expireOldEntries() {
     return new Promise(async (resolve, reject) => {
       const db = await this._openDB();
+      if (!db) {
+        resolve();
+        return;
+      }
+
       try {
         const transaction = db.transaction([this.STORE_FAVICONS, this.STORE_EFFECTIVE_FAVICONS, this.STORE_UNEFFECTIVE_FAVICONS], 'readwrite');
         const favIconsStore = transaction.objectStore(this.STORE_FAVICONS);
