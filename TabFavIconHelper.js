@@ -165,20 +165,36 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
 
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
-        if (event.oldVersion < 1) {
-          const favIconsStore = db.createObjectStore(this.STORE_FAVICONS, { keyPath: 'key', unique: true });
-          const effectiveFavIconsStore = db.createObjectStore(this.STORE_EFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
-          const uneffectiveFavIconsStore = db.createObjectStore(this.STORE_UNEFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
+        const objectStores = db.objectStoreNames;
 
-          favIconsStore.createIndex('url', 'url', { unique: false });
-          favIconsStore.createIndex('timestamp', 'timestamp');
-          effectiveFavIconsStore.createIndex('timestamp', 'timestamp');
-          effectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
-          uneffectiveFavIconsStore.createIndex('timestamp', 'timestamp');
-          uneffectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
-        }
+        if (event.oldVersion < 1 ||
+            !objectStores.contains(this.STORE_FAVICONS))
+          this._createFavIconsDataStore(db);
+
+        if (event.oldVersion < 1 ||
+            !objectStores.contains(this.STORE_EFFECTIVE_FAVICONS))
+          this._createEffectiveFavIconsDataStore(db);
+
+        if (event.oldVersion < 1 ||
+            !objectStores.contains(this.STORE_UNEFFECTIVE_FAVICONS))
+          this._createUneffectiveFavIconsDataStore(db);
       };
     });
+  },
+  _createFavIconsDataStore(db) {
+    const favIconsStore = db.createObjectStore(this.STORE_FAVICONS, { keyPath: 'key', unique: true });
+    favIconsStore.createIndex('url', 'url', { unique: false });
+    favIconsStore.createIndex('timestamp', 'timestamp');
+  },
+  _createEffectiveFavIconsDataStore(db) {
+    const effectiveFavIconsStore = db.createObjectStore(this.STORE_EFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
+    effectiveFavIconsStore.createIndex('timestamp', 'timestamp');
+    effectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
+  },
+  _createUneffectiveFavIconsDataStore(db) {
+    const uneffectiveFavIconsStore = db.createObjectStore(this.STORE_UNEFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
+    uneffectiveFavIconsStore.createIndex('timestamp', 'timestamp');
+    uneffectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
   },
 
   async _associateFavIconUrlToTabUrl({ favIconUrl, tabUrl, store } = {}) {
