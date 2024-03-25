@@ -167,34 +167,38 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         const db = event.target.result;
         const objectStores = db.objectStoreNames;
 
-        if (event.oldVersion < 1 ||
-            !objectStores.contains(this.STORE_FAVICONS))
-          this._createFavIconsDataStore(db);
+        const needToUpgrade = event.oldVersion < this.DB_VERSION;
+        if (needToUpgrade) {
+          if (objectStores.contains(this.STORE_FAVICONS))
+            db.deleteObjectStore(this.STORE_FAVICONS);
+          if (objectStores.contains(this.STORE_EFFECTIVE_FAVICONS))
+            db.deleteObjectStore(this.STORE_EFFECTIVE_FAVICONS);
+          if (objectStores.contains(this.STORE_UNEFFECTIVE_FAVICONS))
+            db.deleteObjectStore(this.STORE_UNEFFECTIVE_FAVICONS);
+        }
 
-        if (event.oldVersion < 1 ||
-            !objectStores.contains(this.STORE_EFFECTIVE_FAVICONS))
-          this._createEffectiveFavIconsDataStore(db);
+        if (needToUpgrade ||
+            !objectStores.contains(this.STORE_FAVICONS)) {
+          const favIconsStore = db.createObjectStore(this.STORE_FAVICONS, { keyPath: 'key', unique: true });
+          favIconsStore.createIndex('url', 'url', { unique: false });
+          favIconsStore.createIndex('timestamp', 'timestamp');
+        }
 
-        if (event.oldVersion < 1 ||
-            !objectStores.contains(this.STORE_UNEFFECTIVE_FAVICONS))
-          this._createUneffectiveFavIconsDataStore(db);
+        if (needToUpgrade ||
+            !objectStores.contains(this.STORE_EFFECTIVE_FAVICONS)) {
+          const effectiveFavIconsStore = db.createObjectStore(this.STORE_EFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
+          effectiveFavIconsStore.createIndex('timestamp', 'timestamp');
+          effectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
+        }
+
+        if (needToUpgrade ||
+            !objectStores.contains(this.STORE_UNEFFECTIVE_FAVICONS)) {
+          const uneffectiveFavIconsStore = db.createObjectStore(this.STORE_UNEFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
+          uneffectiveFavIconsStore.createIndex('timestamp', 'timestamp');
+          uneffectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
+        }
       };
     });
-  },
-  _createFavIconsDataStore(db) {
-    const favIconsStore = db.createObjectStore(this.STORE_FAVICONS, { keyPath: 'key', unique: true });
-    favIconsStore.createIndex('url', 'url', { unique: false });
-    favIconsStore.createIndex('timestamp', 'timestamp');
-  },
-  _createEffectiveFavIconsDataStore(db) {
-    const effectiveFavIconsStore = db.createObjectStore(this.STORE_EFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
-    effectiveFavIconsStore.createIndex('timestamp', 'timestamp');
-    effectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
-  },
-  _createUneffectiveFavIconsDataStore(db) {
-    const uneffectiveFavIconsStore = db.createObjectStore(this.STORE_UNEFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
-    uneffectiveFavIconsStore.createIndex('timestamp', 'timestamp');
-    uneffectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
   },
 
   async _associateFavIconUrlToTabUrl({ favIconUrl, tabUrl, store } = {}) {
