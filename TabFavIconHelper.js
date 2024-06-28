@@ -215,8 +215,8 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
       const favIconStore = transaction.objectStore(this.STORE_FAVICONS);
       const timestamp = Date.now();
 
-      associationStore.put({ url: tabUrl, favIconKey, timestamp });
-      favIconStore.put({ key: favIconKey, url: favIconUrl, timestamp });
+      const associationRequest = associationStore.put({ url: tabUrl, favIconKey, timestamp });
+      const favIconRequest = favIconStore.put({ key: favIconKey, url: favIconUrl, timestamp });
 
       transaction.oncomplete = () => {
         //db.close();
@@ -224,6 +224,14 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         favIconUrl = undefined;
         tabUrl = undefined;
         store = undefined;
+      };
+
+      associationRequest.onerror = event => {
+        console.error(`Failed to associate favIconUrl ${favIconUrl} to tabUrl ${tabUrl} in the store ${store}`, event);
+      };
+
+      favIconRequest.onerror = event => {
+        console.error(`Failed to store favIconUrl ${favIconUrl} to tabUrl ${tabUrl} in the store ${store}`, event);
       };
     }
     catch(error) {
@@ -239,12 +247,17 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     try {
       const transaction = db.transaction([store], 'readwrite');
       const associationStore = transaction.objectStore(store);
-      associationStore.delete(tabUrl);
+      const unassociationRequest = associationStore.delete(tabUrl);
+
       transaction.oncomplete = () => {
         //db.close();
         this._reserveToExpireOldEntries();
         tabUrl = undefined;
         store = undefined;
+      };
+
+      unassociationRequest.onerror = event => {
+        console.error(`Failed to unassociate favIconUrl from tabUrl ${tabUrl} in the store ${store}`, event);
       };
     }
     catch(error) {
@@ -276,6 +289,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
           }
 
           const favIconRequest = favIconStore.get(association.favIconKey);
+
           favIconRequest.onsuccess = () => {
             let favIcon = favIconRequest.result;
             if (!favIcon) {
@@ -293,6 +307,16 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
             favIcon.url = undefined;
             favIcon = undefined;
           };
+
+          favIconRequest.onerror = event => {
+            console.error(`Failed to get favIconUrl from tabUrl ${tabUrl}`, event);
+            resolve(null);
+          };
+        };
+
+        associationRequest.onerror = event => {
+          console.error(`Failed to get favIcon association from tabUrl ${tabUrl}`, event);
+          resolve(null);
         };
 
         transaction.oncomplete = () => {
@@ -343,7 +367,13 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
             return;
           const key = cursor.primaryKey;
           cursor.continue();
-          favIconsStore.delete(key);
+          const deleteRequest = favIconsStore.delete(key);
+          deleteRequest.onerror = event => {
+            console.error(`Failed to clear favicon index`, event);
+          };
+        };
+        favIconRequest.onerror = event => {
+          console.error(`Failed to retrieve favicon index`, event);
         };
 
         const effectiveFavIconRequest = effectiveFavIconIndex.openCursor(IDBKeyRange.upperBound(expirationTimestamp));
@@ -353,7 +383,13 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
             return;
           const url = cursor.primaryKey;
           cursor.continue();
-          effectiveFavIconsStore.delete(url);
+          const deleteRequest = effectiveFavIconsStore.delete(url);
+          deleteRequest.onerror = event => {
+            console.error(`Failed to clear effective favicon index`, event);
+          };
+        };
+        effectiveFavIconRequest.onerror = event => {
+          console.error(`Failed to retrieve effective favicon index`, event);
         };
 
         const uneffectiveFavIconRequest = uneffectiveFavIconIndex.openCursor(IDBKeyRange.upperBound(expirationTimestamp));
@@ -363,7 +399,13 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
             return;
           const url = cursor.primaryKey;
           cursor.continue();
-          uneffectiveFavIconsStore.delete(url);
+          const deleteRequest = uneffectiveFavIconsStore.delete(url);
+          deleteRequest.onerror = event => {
+            console.error(`Failed to clear uneffective favicon index`, event);
+          };
+        };
+        uneffectiveFavIconRequest.onerror = event => {
+          console.error(`Failed to retrieve uneffective favicon index`, event);
         };
 
         transaction.oncomplete = () => {
