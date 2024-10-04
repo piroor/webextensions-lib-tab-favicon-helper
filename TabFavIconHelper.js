@@ -539,6 +539,9 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
 
   // public
   async getLastEffectiveFavIconURL(tab) {
+    if (tab.favIconUrl.startsWith('data:'))
+      return tab.favIconUrl;
+
     const uneffectiveFavIconUrl = await this._getAssociatedFavIconUrlFromTabUrl({ tabUrl: tab.url, store: this.STORE_UNEFFECTIVE_FAVICONS });
     if (uneffectiveFavIconUrl)
       return null;
@@ -554,7 +557,13 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     return lastData && lastData.url == tab.url && lastData.favIconUrl;
   },
 
-  _getEffectiveFavIconURL(tab, favIconUrl = null) {
+  async _getEffectiveFavIconURL(tab, favIconUrl = null) {
+    if (tab.favIconUrl.startsWith('data:')) {
+      browser.sessions.removeTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
+      this._unassociateFavIconUrlFromTabUrl({ tabUrl: tab.url, store: this.STORE_UNEFFECTIVE_FAVICONS });
+      return tab.favIconUrl;
+    }
+
     return new Promise(async (resolve, reject) => {
       favIconUrl = this._getSafeFaviconUrl(favIconUrl || tab.favIconUrl);
       let storedFavIconUrl;
