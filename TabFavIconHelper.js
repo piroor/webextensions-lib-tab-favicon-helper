@@ -138,7 +138,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   },
 
   DB_NAME: 'TabFavIconHelper',
-  DB_VERSION: 1,
+  DB_VERSION: 2,
   STORE_FAVICONS: 'favIcons',
   STORE_EFFECTIVE_FAVICONS: 'effectiveFavIcons',
   STORE_UNEFFECTIVE_FAVICONS: 'uneffectiveFavIcons',
@@ -180,20 +180,20 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         if (needToUpgrade ||
             !objectStores.contains(this.STORE_FAVICONS)) {
           const favIconsStore = db.createObjectStore(this.STORE_FAVICONS, { keyPath: 'key', unique: true });
-          favIconsStore.createIndex('url', 'url', { unique: false });
+          favIconsStore.createIndex('urlKey', 'urlKey', { unique: false });
           favIconsStore.createIndex('timestamp', 'timestamp');
         }
 
         if (needToUpgrade ||
             !objectStores.contains(this.STORE_EFFECTIVE_FAVICONS)) {
-          const effectiveFavIconsStore = db.createObjectStore(this.STORE_EFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
+          const effectiveFavIconsStore = db.createObjectStore(this.STORE_EFFECTIVE_FAVICONS, { keyPath: 'urlKey', unique: true });
           effectiveFavIconsStore.createIndex('timestamp', 'timestamp');
           effectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
         }
 
         if (needToUpgrade ||
             !objectStores.contains(this.STORE_UNEFFECTIVE_FAVICONS)) {
-          const uneffectiveFavIconsStore = db.createObjectStore(this.STORE_UNEFFECTIVE_FAVICONS, { keyPath: 'url', unique: true });
+          const uneffectiveFavIconsStore = db.createObjectStore(this.STORE_UNEFFECTIVE_FAVICONS, { keyPath: 'urlKey', unique: true });
           uneffectiveFavIconsStore.createIndex('timestamp', 'timestamp');
           uneffectiveFavIconsStore.createIndex('favIconKey', 'favIconKey', { unique: false });
         }
@@ -202,8 +202,9 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   },
 
   async _associateFavIconUrlToTabUrl({ favIconUrl, tabUrl, store } = {}) {
-    const [db, favIconKey] = await Promise.all([
+    const [db, tabUrlKey, favIconKey] = await Promise.all([
       this._openDB(),
+      this._urlToKey(tabUrl),
       this._urlToKey(favIconUrl),
     ]);
     if (!db)
@@ -215,7 +216,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
       const favIconStore = transaction.objectStore(this.STORE_FAVICONS);
       const timestamp = Date.now();
 
-      const associationRequest = associationStore.put({ url: tabUrl, favIconKey, timestamp });
+      const associationRequest = associationStore.put({ urlKey: tabUrlKey, favIconKey, timestamp });
       const favIconRequest = favIconStore.put({ key: favIconKey, url: favIconUrl, timestamp });
 
       transaction.oncomplete = () => {
@@ -240,14 +241,17 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   },
 
   async _unassociateFavIconUrlFromTabUrl({ tabUrl, store } = {}) {
-    const db = await this._openDB();
+    const [db, tabUrlKey] = await Promise.all([
+      this._openDB(),
+      this._urlToKey(tabUrl),
+    ]);
     if (!db)
       return;
 
     try {
       const transaction = db.transaction([store], 'readwrite');
       const associationStore = transaction.objectStore(store);
-      const unassociationRequest = associationStore.delete(tabUrl);
+      const unassociationRequest = associationStore.delete(tabUrlKey);
 
       transaction.oncomplete = () => {
         //db.close();
@@ -267,7 +271,10 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
 
   async _getAssociatedFavIconUrlFromTabUrl({ tabUrl, store } = {}) {
     return new Promise(async (resolve, _reject) => {
-      const db = await this._openDB();
+      const [db, tabUrlKey] = await Promise.all([
+        this._openDB(),
+        this._urlToKey(tabUrl),
+      ]);
       if (!db) {
         resolve(null);
         return;
@@ -278,7 +285,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         const associationStore = transaction.objectStore(store);
         const favIconStore = transaction.objectStore(this.STORE_FAVICONS);
 
-        const associationRequest = associationStore.get(tabUrl);
+        const associationRequest = associationStore.get(tabUrlKey);
 
         associationRequest.onsuccess = () => {
           const association = associationRequest.result;
