@@ -652,19 +652,24 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     // See also: https://github.com/piroor/treestyletab/issues/2064
     timer = setTimeout(async () => {
       this._updatingTabs.delete(tabId);
-      const tab = await browser.tabs.get(tabId);
-      if (!tab ||
-          (changeInfo.favIconUrl &&
-           tab.favIconUrl != changeInfo.favIconUrl) ||
-          (changeInfo.url &&
-           tab.url != changeInfo.url) ||
-          !this._hasFavIconInfo(tab))
-        return; // expired
+      try {
+        const tab = await browser.tabs.get(tabId);
+        if (!tab ||
+            (changeInfo.favIconUrl &&
+             tab.favIconUrl != changeInfo.favIconUrl) ||
+            (changeInfo.url &&
+             tab.url != changeInfo.url) ||
+            !this._hasFavIconInfo(tab))
+          return; // expired
 
-      await this._getEffectiveFavIconURL(
-        tab,
-        changeInfo.favIconUrl
-      ).catch(_error => {});
+        await this._getEffectiveFavIconURL(
+          tab,
+          changeInfo.favIconUrl
+        ).catch(_error => {});
+      }
+      catch(_error) {
+        // tabs.get() may raise an error if the given ID is invalid
+      }
     }, 5000);
     this._updatingTabs.set(tabId, timer);
   },
