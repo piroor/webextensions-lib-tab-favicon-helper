@@ -503,6 +503,17 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   },
 
   getSafeFaviconUrl(url) {
+    if (/^data:image\/png;base64,/i.test(url)) {
+      try {
+        const { width, height } = this.getPngDimensionsFromDataUri(url);
+        if (!width || !height) {
+          return this._getSVGDataURI(this.FAVICON_GLOBE);
+        }
+      }
+      catch (_error) {
+        return this._getSVGDataURI(this.FAVICON_GLOBE);
+      }
+    }
     switch (url) {
       case 'chrome://browser/content/aboutlogins/icons/favicon.svg':
         return this._getSVGDataURI(this.FAVICON_LOCKWISE);
@@ -561,14 +572,31 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
   },
 
   async _getEffectiveFavIconURL(tab, favIconUrl = null) {
-    if (tab.favIconUrl?.startsWith('data:')) {
+    if (!favIconUrl) {
+      favIconUrl = tab.favIconUrl;
+    }
+    if (favIconUrl?.startsWith('data:')) {
+      if (/^data:image\/png;base64,/i.test(favIconUrl)) {
+        try {
+          const { width, height } = this.getPngDimensionsFromDataUri(favIconUrl);
+          if (!width || !height) {
+            throw new Error('zero size image');
+          }
+        }
+        catch (_error) {
+          browser.sessions.removeTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
+          this._unassociateFavIconUrlFromTabUrl({ tabUrl: tab.url, store: this.STORE_EFFECTIVE_FAVICONS });
+          this._associateFavIconUrlToTabUrl({ tabUrl: tab.url, favIconUrl, store: this.STORE_UNEFFECTIVE_FAVICONS });
+          throw new Error('No effective icon');
+        }
+      }
       browser.sessions.removeTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
       this._unassociateFavIconUrlFromTabUrl({ tabUrl: tab.url, store: this.STORE_UNEFFECTIVE_FAVICONS });
-      return tab.favIconUrl;
+      return favIconUrl;
     }
 
     return new Promise(async (resolve, reject) => {
-      favIconUrl = this.getSafeFaviconUrl(favIconUrl || tab.favIconUrl);
+      favIconUrl = this.getSafeFaviconUrl(favIconUrl);
       let storedFavIconUrl;
       if (!favIconUrl && tab.discarded) {
         // discarded tab doesn't have favIconUrl, so we should use cached data.
@@ -675,5 +703,34 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     return 'favIconUrl' in tabOrChangeInfo;
   },
   _updatingTabs: new Map(),
+
+  getPngDimensionsFromDataUri(uri) {
+    if (!/^data:image\/png;base64,/i.test(uri))
+      throw new Error('impossible to parse as PNG image data ', uri);
+
+    const base64Data = uri.split(',')[1];
+    const binaryData = atob(base64Data);
+    const byteArray = new Uint8Array(binaryData.length);
+    const requiredScanSize = Math.min(binaryData.length, 24);
+    for (let i = 0; i < requiredScanSize; i++) {
+      byteArray[i] = binaryData.charCodeAt(i);
+    }
+    const pngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+    for (let i = 0; i < pngSignature.length; i++) {
+      if (byteArray[i] !== pngSignature[i])
+        throw new Error('invalid PNG header');
+    }
+    const width =
+    (byteArray[16] << 24) |
+    (byteArray[17] << 16) |
+    (byteArray[18] << 8) |
+    byteArray[19];
+    const height =
+    (byteArray[20] << 24) |
+    (byteArray[21] << 16) |
+    (byteArray[22] << 8) |
+    byteArray[23];
+    return { width, height };
+  },
 };
 TabFavIconHelper._init(); // eslint-disable-line no-underscore-dangle
