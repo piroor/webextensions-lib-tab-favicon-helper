@@ -502,7 +502,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     return false;
   },
 
-  _getSafeFaviconUrl(url) {
+  getSafeFaviconUrl(url) {
     switch (url) {
       case 'chrome://browser/content/aboutlogins/icons/favicon.svg':
         return this._getSVGDataURI(this.FAVICON_LOCKWISE);
@@ -568,7 +568,7 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     }
 
     return new Promise(async (resolve, reject) => {
-      favIconUrl = this._getSafeFaviconUrl(favIconUrl || tab.favIconUrl);
+      favIconUrl = this.getSafeFaviconUrl(favIconUrl || tab.favIconUrl);
       let storedFavIconUrl;
       if (!favIconUrl && tab.discarded) {
         // discarded tab doesn't have favIconUrl, so we should use cached data.
