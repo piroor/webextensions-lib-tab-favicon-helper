@@ -489,11 +489,11 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
           params.image.src = url;
           params.image.classList.remove('error');
           url = undefined;
-        },
-              _error => {
-                params.image.src = '';
-                params.image.classList.add('error');
-              });
+        })
+        .catch(_error => {
+          params.image.src = '';
+          params.image.classList.add('error');
+        });
     });
   },
 
