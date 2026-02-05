@@ -483,9 +483,14 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
 
   // public
   loadToImage(params = {}) {
+    const currentSrc = params.image.src;
     this._addTask(() => {
       this._getEffectiveFavIconURL(params.tab, params.url)
         .then(url => {
+          if (params.image.src != currentSrc) {
+            // favicon is changed by someone!
+            return;
+          }
           params.image.src = url;
           params.image.classList.remove('error');
           url = undefined;
