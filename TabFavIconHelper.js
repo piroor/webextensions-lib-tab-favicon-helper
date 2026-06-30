@@ -591,14 +591,14 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
         }
         catch (_error) {
           if (this._sessionAPIAvailable)
-          browser.sessions.removeTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
+            browser.sessions.removeTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
           this._unassociateFavIconUrlFromTabUrl({ tabUrl: tab.url, store: this.STORE_EFFECTIVE_FAVICONS });
           this._associateFavIconUrlToTabUrl({ tabUrl: tab.url, favIconUrl, store: this.STORE_UNEFFECTIVE_FAVICONS });
           throw new Error('No effective icon');
         }
       }
       if (this._sessionAPIAvailable)
-      browser.sessions.removeTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
+        browser.sessions.removeTabValue(tab.id, this.LAST_EFFECTIVE_FAVICON);
       this._unassociateFavIconUrlFromTabUrl({ tabUrl: tab.url, store: this.STORE_UNEFFECTIVE_FAVICONS });
       return favIconUrl;
     }
