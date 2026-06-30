@@ -487,7 +487,8 @@ data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACGFjVEw
     this._addTask(() => {
       this._getEffectiveFavIconURL(params.tab, params.url)
         .then(url => {
-          if (params.image.src != currentSrc) {
+          if (currentSrc &&
+              params.image.src != currentSrc) {
             // favicon is changed by someone!
             return;
           }
